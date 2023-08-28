@@ -116,6 +116,89 @@ func channelsListByUsername(service *youtube.Service, part string, forUsername s
               response.Items[0].Statistics.ViewCount))
 }
 
+func channelsListById(ctx context.Context, service *youtube.Service, part string, id string) {
+  call := service.Channels.List([]string{part})
+  call = call.Id(id)
+  response, err := call.Do()
+  handleError(err, "")
+  channel := response.Items[0]
+  relatedPlaylists := channel.ContentDetails.RelatedPlaylists
+  
+  fmt.Println(fmt.Sprintf("\tThis channel's ID is %s. Its title is '%s', " +
+  "and it has %d views.Relevant playlists: Uploads: %s | Likes: %s | Favorites: %s",
+  channel.Id,
+  channel.Snippet.Title,
+  channel.Statistics.ViewCount,
+  relatedPlaylists.Uploads,
+  relatedPlaylists.Likes,
+  relatedPlaylists.Favorites))
+
+  playlistItemsByPlaylistId(ctx, service, relatedPlaylists.Uploads, "Uploads")
+  playlistItemsByPlaylistId(ctx, service, relatedPlaylists.Likes, "Likes")
+  playlistItemsByPlaylistId(ctx, service, relatedPlaylists.Favorites, "Favorites")
+}
+
+func subscriptionsList(ctx context.Context, service *youtube.Service) {
+    subscriptionService := youtube.NewSubscriptionsService(service)
+    call := subscriptionService.List([]string{"snippet", "contentDetails"})
+    numChannels := 0
+    call.Mine(true).Pages(ctx, func (response *youtube.SubscriptionListResponse) (error) {
+        for _, item := range response.Items {
+            numChannels += 1
+            channelId := item.Snippet.ResourceId.ChannelId
+            fmt.Printf("%d: %s / %s / %s\n", numChannels, item.Snippet.Title, channelId, item.Id)
+            subscriptionDetails(ctx, service, item)
+
+
+            //activitiesListByChannelId(ctx, service, channelId)
+        }
+        return nil
+    })
+}
+
+func playlistItemsByPlaylistId(ctx context.Context, service *youtube.Service, playlistId string, name string) {
+    playlistsItemService := youtube.NewPlaylistItemsService(service)
+    call := playlistsItemService.List([]string{"snippet", "contentDetails"}).PlaylistId(playlistId)
+    call.Pages(ctx, func(response *youtube.PlaylistItemListResponse) (error) {
+        for _, item := range response.Items {
+            fmt.Printf("\t PI %s >> %s (video id: %s)\n", name, item.Snippet.Title, item.ContentDetails.VideoId)
+        }
+
+        return nil
+    })
+}
+
+func playlistsListByChannelId(ctx context.Context, service *youtube.Service, channelId string) {
+    playlistsService := youtube.NewPlaylistsService(service)
+    playlistsListCall := playlistsService.List([]string{"snippet", "contentDetails"}).ChannelId(channelId)
+    playlistsListCall.Pages(ctx, func(response *youtube.PlaylistListResponse) (error) {
+        for _, item := range response.Items {
+            fmt.Printf("\t P>> %s\n", item.Snippet.Title)
+        }
+
+        return nil
+    })
+
+}
+
+func activitiesListByChannelId(ctx context.Context, service *youtube.Service, channelId string) {
+    activitiesService := youtube.NewActivitiesService(service)
+    activities_call := activitiesService.List([]string{"snippet", "contentDetails"}).ChannelId(channelId).MaxResults(50)
+    activities_call.Pages(ctx, func(response *youtube.ActivityListResponse) (error) {
+        for _, item := range response.Items {
+            fmt.Printf("\t -> %s (%s) @ %s\n", item.Snippet.Title, item.Snippet.Type, item.Snippet.PublishedAt)
+            if item.Snippet.Type == "upload" {
+                fmt.Printf("\t\t -> upload video id: %s\n", item.ContentDetails.Upload.VideoId)
+            }
+        }
+        return nil
+    })
+}
+
+func subscriptionDetails(ctx context.Context, service *youtube.Service, subscription *youtube.Subscription) {
+    channelsListById(ctx, service, "snippet,contentDetails,statistics",  subscription.Snippet.ResourceId.ChannelId)
+}
+
 
 func main() {
   ctx := context.Background()
@@ -137,4 +220,5 @@ func main() {
   handleError(err, "Error creating YouTube client")
 
   channelsListByUsername(service, "snippet,contentDetails,statistics", "GoogleDevelopers")
+  subscriptionsList(ctx, service);
 }
