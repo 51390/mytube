@@ -1,6 +1,14 @@
 import os
 
 from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+
+db = SQLAlchemy()
+
+class Video(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String)
+    duration = db.Column(db.Integer)
 
 
 def create_app(test_config=None):
@@ -8,8 +16,13 @@ def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
         SECRET_KEY='dev',
-        DATABASE=os.path.join(app.instance_path, 'flaskr.sqlite'),
+        SQLALCHEMY_DATABASE_URI='postgresql://postgres:db712bccc14d602212c928a39ba7e23d@localhost',
     )
+    app.config.from_prefixed_env(prefix='YOURTUBE')
+    db.init_app(app)
+
+    with app.app_context():
+        db.create_all()
 
     if test_config is None:
         # load the instance config, if it exists, when not testing
@@ -26,7 +39,7 @@ def create_app(test_config=None):
 
     # a simple page that says hello
     @app.route('/hello')
-    def hello():
+    async def hello():
         return 'Hello, World!'
 
     return app
