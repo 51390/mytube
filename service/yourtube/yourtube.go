@@ -1,5 +1,4 @@
-
-package main
+package yourtube
 
 import (
   "errors"
@@ -150,6 +149,8 @@ func subscriptionsList(ctx context.Context, service *youtube.Service) {
         return nil
     })
 
+    fmt.Println("Done")
+
     channelsListById(ctx, service, channelIds...)
 }
 
@@ -187,7 +188,7 @@ func videoDetails(ctx context.Context, service *youtube.Service, ids []string) {
     }
 }
 
-func main() {
+func Sync() {
   ctx := context.Background()
 
   b, err := ioutil.ReadFile("client_secret.json")
