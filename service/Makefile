@@ -1,6 +1,8 @@
 .phony: clean
 
-bin/sync: bin cmd/sync/main.go
+SOURCES := $(shell find . -iname '*.go')
+
+bin/sync: bin $(SOURCES)
 	go build -o bin/sync cmd/sync/main.go
 
 bin:

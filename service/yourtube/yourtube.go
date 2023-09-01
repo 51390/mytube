@@ -11,6 +11,7 @@ import (
   "os"
   "os/user"
   "path/filepath"
+  "strings"
 
   "golang.org/x/net/context"
   "golang.org/x/oauth2"
@@ -94,7 +95,7 @@ func saveToken(file string, token *oauth2.Token) {
   json.NewEncoder(f).Encode(token)
 }
 
-func handleError(err error, message string) {
+func HandleError(err error, message string) {
   if message == "" {
     message = "Error making API call"
   }
@@ -171,10 +172,11 @@ func playlistItemsByPlaylistId(ctx context.Context, service *youtube.Service, pl
     videoDetails(ctx, service, videoIds)
 }
 
-func videoDetails(ctx context.Context, service *youtube.Service, ids []string) {
+func videoDetails(ctx context.Context, service *youtube.Service, ids []string) []*video {
     perCall := 50
     numCalls := len(ids) / perCall
     videosService := youtube.NewVideosService(service)
+    videos := []*video{};
 
     for i := 0; i < numCalls; i++ {
         idBatch := ids[i * perCall : (i+1) * perCall]
@@ -182,10 +184,28 @@ func videoDetails(ctx context.Context, service *youtube.Service, ids []string) {
         videosListCall.Pages(ctx, func(response *youtube.VideoListResponse) (error) {
             for _, item := range response.Items {
                 fmt.Printf("\t V>> %s %s\n", item.Snippet.Title, item.ContentDetails.Duration)
+                video_item := video{
+                    Id: item.Id,
+                    ChannelId: item.Snippet.ChannelId,
+                    Title: item.Snippet.Title,
+                    ChannelTitle: item.Snippet.ChannelTitle,
+                    Duration: item.ContentDetails.Duration,
+                    Tags: strings.Join(item.Snippet.Tags, ","),
+                    CommentCount: item.Statistics.CommentCount,
+                    DislikeCount: item.Statistics.DislikeCount,
+                    LikeCount: item.Statistics.LikeCount,
+                    FavoriteCount: item.Statistics.FavoriteCount,
+                    PublishedAt: item.Snippet.PublishedAt,
+                    Description: item.Snippet.Description,
+                    ViewCount: item.Statistics.ViewCount, 
+                }
+                videos = append(videos, &video_item)
             }
             return nil
         })
     }
+
+    return videos
 }
 
 func Sync() {
@@ -205,7 +225,7 @@ func Sync() {
   client := getClient(ctx, config)
   service, err := youtube.New(client)
 
-  handleError(err, "Error creating YouTube client")
+  HandleError(err, "Error creating YouTube client")
 
   subscriptionsList(ctx, service);
 }
