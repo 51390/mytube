@@ -3,7 +3,8 @@ package main
 import "yourtube.51390.cloud/yourtube"
 
 func main() {
-    _, err := yourtube.InitDb()
+    db, err := yourtube.InitDb()
     yourtube.HandleError(err, "Failed initializing db")
-    yourtube.Sync()
+    yourtube.Migrate(db)
+    yourtube.Sync(db)
 }
