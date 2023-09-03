@@ -1,5 +1,4 @@
-
-package main
+package yourtube
 
 import (
   "errors"
@@ -12,11 +11,14 @@ import (
   "os"
   "os/user"
   "path/filepath"
+  "strings"
 
   "golang.org/x/net/context"
   "golang.org/x/oauth2"
   "golang.org/x/oauth2/google"
   "google.golang.org/api/youtube/v3"
+  "gorm.io/gorm"
+  "gorm.io/gorm/clause"
 )
 
 const missingClientSecretsMessage = `
@@ -95,7 +97,7 @@ func saveToken(file string, token *oauth2.Token) {
   json.NewEncoder(f).Encode(token)
 }
 
-func handleError(err error, message string) {
+func HandleError(err error, message string) {
   if message == "" {
     message = "Error making API call"
   }
@@ -125,7 +127,7 @@ func channelsListById(ctx context.Context, service *youtube.Service, id ...strin
               relatedPlaylists.Likes,
               relatedPlaylists.Favorites))
 
-              playlistIds = append(playlistIds, relatedPlaylists.Uploads, relatedPlaylists.Likes, relatedPlaylists.Favorites)
+             playlistIds = append(playlistIds, relatedPlaylists.Uploads, relatedPlaylists.Likes, relatedPlaylists.Favorites)
           }
 
           return nil
@@ -150,6 +152,8 @@ func subscriptionsList(ctx context.Context, service *youtube.Service) {
         return nil
     })
 
+    fmt.Println("Done")
+
     channelsListById(ctx, service, channelIds...)
 }
 
@@ -170,24 +174,40 @@ func playlistItemsByPlaylistId(ctx context.Context, service *youtube.Service, pl
     videoDetails(ctx, service, videoIds)
 }
 
-func videoDetails(ctx context.Context, service *youtube.Service, ids []string) {
+func videoDetails(ctx context.Context, service *youtube.Service, ids []string) []*video {
     perCall := 50
     numCalls := len(ids) / perCall
     videosService := youtube.NewVideosService(service)
+    videos := []*video{};
 
     for i := 0; i < numCalls; i++ {
         idBatch := ids[i * perCall : (i+1) * perCall]
-        videosListCall := videosService.List([]string{"snippet", "contentDetails"}).Id(idBatch...)
+        videosListCall := videosService.List([]string{"snippet", "contentDetails", "statistics"}).Id(idBatch...)
         videosListCall.Pages(ctx, func(response *youtube.VideoListResponse) (error) {
             for _, item := range response.Items {
                 fmt.Printf("\t V>> %s %s\n", item.Snippet.Title, item.ContentDetails.Duration)
+                video_item := NewVideo(
+                    item.Id, item.Snippet.Title, item.Snippet.Description,
+                    item.Snippet.ChannelId, item.Snippet.ChannelTitle,
+                    item.Statistics.ViewCount, item.Statistics.LikeCount,
+                    item.Statistics.CommentCount, item.Statistics.DislikeCount,
+                    item.Statistics.FavoriteCount, item.ContentDetails.Duration,
+                    item.Snippet.PublishedAt, strings.Join(item.Snippet.Tags, ","),
+                )
+                videos = append(videos, &video_item)
+                db, ok := ctx.Value("db").(*gorm.DB)
+                if ok {
+                    db.Clauses(clause.OnConflict{ UpdateAll:true }).Create(&video_item)
+                }
             }
             return nil
         })
     }
+
+    return videos
 }
 
-func main() {
+func Sync(db *gorm.DB) {
   ctx := context.Background()
 
   b, err := ioutil.ReadFile("client_secret.json")
@@ -204,9 +224,9 @@ func main() {
   client := getClient(ctx, config)
   service, err := youtube.New(client)
 
-  handleError(err, "Error creating YouTube client")
+  HandleError(err, "Error creating YouTube client")
 
-  subscriptionsList(ctx, service);
+  subscriptionsList(context.WithValue(ctx, "db", db), service);
 }
 
 func max(a, b int) int {
