@@ -174,11 +174,11 @@ func playlistItemsByPlaylistId(ctx context.Context, service *youtube.Service, pl
 	videoDetails(ctx, service, videoIds)
 }
 
-func videoDetails(ctx context.Context, service *youtube.Service, ids []string) []*video {
+func videoDetails(ctx context.Context, service *youtube.Service, ids []string) []*Video {
 	perCall := 50
 	numCalls := len(ids) / perCall
 	videosService := youtube.NewVideosService(service)
-	videos := []*video{}
+	videos := []*Video{}
 
 	for i := 0; i < numCalls; i++ {
 		idBatch := ids[i*perCall : (i+1)*perCall]

@@ -13,7 +13,7 @@ func InitDb() (db *gorm.DB, err error) {
 }
 
 func Migrate(db *gorm.DB) {
-	err := db.AutoMigrate(&video{})
+	err := db.AutoMigrate(&Video{})
 	HandleError(err, "Failed migrating db.")
 	fmt.Println("Migrate db ok")
 }

@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type video struct {
+type Video struct {
 	gorm.Model
 
 	Id            string `gorm:"primaryKey"`
@@ -28,13 +28,13 @@ func NewVideo(id string, title string, description string,
 	channelId string, channelTitle string,
 	viewCount uint64, likeCount uint64, commentCount uint64,
 	dislikeCount uint64, favoriteCount uint64, durationString string,
-	publishedAt string, tags string) video {
+	publishedAt string, tags string) Video {
 
 	d, err := duration.Parse(durationString)
 	if err == nil {
 		durationString = fmt.Sprintf("%02d:%02d:%02d", uint64(d.Hours), uint64(d.Minutes), uint64(d.Seconds))
 	}
-	return video{
+	return Video{
 		Id:            id,
 		Title:         title,
 		Description:   description,
