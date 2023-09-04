@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -42,6 +43,24 @@ func db(r *http.Request) (db *gorm.DB, err error) {
 
 type VideoResponse struct {
 	*yourtube.Video
+}
+
+func (vr *VideoResponse) MarshalJSON() ([]byte, error) {
+	fields := make(map[string]interface{})
+	fields["id"] = vr.Id
+	fields["channelId"] = vr.ChannelId
+	fields["commentCount"] = vr.CommentCount
+	fields["description"] = vr.Description
+	fields["dislikeCount"] = vr.DislikeCount
+	fields["duration"] = vr.Duration
+	fields["favoriteCount"] = vr.FavoriteCount
+	fields["likeCount"] = vr.LikeCount
+	fields["publishedAt"] = vr.PublishedAt
+	fields["tags"] = vr.Tags
+	fields["title"] = vr.Title
+	fields["viewCount"] = vr.ViewCount
+
+	return json.Marshal(fields)
 }
 
 func (vr *VideoResponse) Render(w http.ResponseWriter, r *http.Request) error {
