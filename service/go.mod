@@ -4,6 +4,7 @@ go 1.21.0
 
 require (
 	github.com/go-chi/chi/v5 v5.0.10
+	github.com/go-chi/render v1.0.3
 	github.com/sosodev/duration v1.1.0
 	golang.org/x/net v0.14.0
 	golang.org/x/oauth2 v0.11.0
@@ -16,7 +17,6 @@ require (
 	cloud.google.com/go/compute v1.23.0 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	github.com/ajg/form v1.5.1 // indirect
-	github.com/go-chi/render v1.0.3 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/s2a-go v0.1.5 // indirect
