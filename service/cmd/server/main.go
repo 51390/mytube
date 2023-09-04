@@ -11,7 +11,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	//"github.com/go-chi/httplog"
 	"github.com/go-chi/render"
 	"gorm.io/gorm"
 
@@ -45,10 +44,11 @@ type VideoResponse struct {
 	*yourtube.Video
 }
 
-func (vr *VideoResponse) MarshalJSON() ([]byte, error) {
+func (vr VideoResponse) MarshalJSON() ([]byte, error) {
 	fields := make(map[string]interface{})
 	fields["id"] = vr.Id
 	fields["channelId"] = vr.ChannelId
+	fields["channelTitle"] = vr.ChannelTitle
 	fields["commentCount"] = vr.CommentCount
 	fields["description"] = vr.Description
 	fields["dislikeCount"] = vr.DislikeCount
@@ -59,6 +59,8 @@ func (vr *VideoResponse) MarshalJSON() ([]byte, error) {
 	fields["tags"] = vr.Tags
 	fields["title"] = vr.Title
 	fields["viewCount"] = vr.ViewCount
+
+    fmt.Println("MARSHAL", fields["id"])
 
 	return json.Marshal(fields)
 }
@@ -71,9 +73,11 @@ func NewVideoResponse(video *yourtube.Video) *VideoResponse {
 	return &VideoResponse{Video: video}
 }
 
-func NewVideoListResponse(videos *[]yourtube.Video) (response []render.Renderer) {
-	for _, video := range *videos {
-		response = append(response, NewVideoResponse(&video))
+func NewVideoListResponse(videos []*yourtube.Video) (response []render.Renderer) {
+	for _, video := range videos {
+        fmt.Println("-->", video.Id)
+        response = append(response, NewVideoResponse(video))
+        //response = append(response, NewVideoResponse(yourtube.Video{Id: video.Id}))
 	}
 
 	return
@@ -119,10 +123,10 @@ func videos(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("Test")
 
-	videos := []yourtube.Video{}
-	if err = db.Where("").Find(&videos).Error; err != nil {
+	videos := []*yourtube.Video{}
+	if err = db.Find(&videos).Error; err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-	} else if err = render.RenderList(w, r, NewVideoListResponse(&videos)); err != nil {
+	} else if err = render.RenderList(w, r, NewVideoListResponse(videos)); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
