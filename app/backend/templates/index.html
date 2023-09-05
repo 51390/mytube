@@ -1,0 +1,16 @@
+{% from 'bootstrap5/form.html' import render_form %}
+
+{% block content %}
+    {{ render_form(form) }}
+
+
+    <ul class="list-group">
+        {% for video in videos %}
+        <li class="list-group-item">
+            {{ video.channelTitle }} : {{ video.title }}
+            ({{ video.duration }}) [{{ video.publishedAt }}]
+        </li>
+        {% endfor %}
+    </ul>
+
+{% endblock %}
