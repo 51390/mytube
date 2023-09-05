@@ -1,4 +1,5 @@
 import aiohttp
+import datetime
 import os
 
 from flask import Flask, render_template
@@ -25,10 +26,13 @@ app = create_app()
 bootstrap = Bootstrap5(app)
 csrf = CSRFProtect(app)
 
+def today():
+    return datetime.datetime.today().strftime("%Y-%m-%d") 
+
 class FilterForm(FlaskForm):
-    min_duration = StringField('Minimum Duration', default='05:00')
-    max_duration = StringField('Maximum Duration', default='15:00')
-    published_since = StringField('Published Since', default='2023-08-27')
+    min_duration = StringField('Minimum Duration', default='00:05:00')
+    max_duration = StringField('Maximum Duration', default='00:15:00')
+    published_since = StringField('Published Since', default=today)
     submit_field = SubmitField('Filter')
 
 async def fetch_videos(min_duration = None, max_duration = None, published_since = None):

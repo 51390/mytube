@@ -1,4 +1,4 @@
-.phony: clean all format
+.phony: clean all format sync clean
 
 all: bin/sync bin/server
 
@@ -18,3 +18,6 @@ format: cmd yourtube
 
 clean:
 	rm -rf bin
+
+sync:
+	./bin/sync
