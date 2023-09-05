@@ -11,22 +11,20 @@
             </div>
         </div>
     </div>
-    <div class="container mt-4">
-        <div class="row">
-            <div class="col">
-                <ul class="list-group">
-                    {% for video in videos %}
-                    <li class="list-group-item my-2">
-                        {{ video.channelTitle }}<br/>
-                        <a target="external" href=https://youtube.com/watch?v={{video.id}}>
-                            {{ video.title }}
-                        </a><br/>
-                        ({{ video.duration }}) [{{ video.publishedAt }}]
-                    </li>
-                    {% endfor %}
-                </ul>
+    <div class="container mt-2">
+        {% for video in videos %}
+            <div class="row my-2">
+                <div class="col-auto">
+                    <img src="{{video.thumbnail}}"/>
+                </div>
+                <div class="col">
+                    {{ video.channelTitle }}<br/>
+                    <a target="external" href=https://youtube.com/watch?v={{video.id}}>
+                        {{ video.title }}
+                    </a><br/>
+                    ({{ video.duration }}) [{{ video.publishedAt }}]
+                </div>
             </div>
-        </div>
+         {% endfor %}
     </div>
-
 {% endblock %}

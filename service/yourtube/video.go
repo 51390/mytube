@@ -22,13 +22,14 @@ type Video struct {
 	Tags          string
 	Title         string
 	ViewCount     uint64
+    Thumbnail     string
 }
 
 func NewVideo(id string, title string, description string,
 	channelId string, channelTitle string,
 	viewCount uint64, likeCount uint64, commentCount uint64,
 	dislikeCount uint64, favoriteCount uint64, durationString string,
-	publishedAt string, tags string) Video {
+	publishedAt string, tags string, thumbnail string) Video {
 
 	d, err := duration.Parse(durationString)
 	if err == nil {
@@ -47,5 +48,6 @@ func NewVideo(id string, title string, description string,
 		PublishedAt:   publishedAt,
 		ViewCount:     viewCount,
 		Duration:      durationString,
+        Thumbnail:     thumbnail,
 	}
 }

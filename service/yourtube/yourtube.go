@@ -174,6 +174,16 @@ func playlistItemsByPlaylistId(ctx context.Context, service *youtube.Service, pl
 	videoDetails(ctx, service, videoIds)
 }
 
+func thumbnailUrl(video *youtube.Video) string {
+    if video.Snippet.Thumbnails.Medium != nil {
+        return video.Snippet.Thumbnails.Medium.Url
+    } else if video.Snippet.Thumbnails.Default != nil {
+        return video.Snippet.Thumbnails.Default.Url
+    } else {
+        return ""
+    }
+}
+
 func videoDetails(ctx context.Context, service *youtube.Service, ids []string) []*Video {
 	perCall := 50
 	numCalls := len(ids) / perCall
@@ -193,6 +203,7 @@ func videoDetails(ctx context.Context, service *youtube.Service, ids []string) [
 					item.Statistics.CommentCount, item.Statistics.DislikeCount,
 					item.Statistics.FavoriteCount, item.ContentDetails.Duration,
 					item.Snippet.PublishedAt, strings.Join(item.Snippet.Tags, ","),
+                    thumbnailUrl(item),
 				)
 				videos = append(videos, &video_item)
 				db, ok := ctx.Value("db").(*gorm.DB)

@@ -66,6 +66,7 @@ func (vr VideoResponse) MarshalJSON() ([]byte, error) {
 	fields["title"] = vr.Title
 	fields["viewCount"] = vr.ViewCount
     fields["publishedAt"] = vr.PublishedAt
+    fields["thumbnail"] = vr.Thumbnail
 
     fmt.Println("MARSHAL", fields["id"])
 
@@ -109,7 +110,6 @@ func parseFilter(db *gorm.DB, filter string, value string) *gorm.DB {
 }
 
 func videos(w http.ResponseWriter, r *http.Request) {
-	//log := httplog.LogEntry(r.Context())
 	err := r.ParseForm()
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
