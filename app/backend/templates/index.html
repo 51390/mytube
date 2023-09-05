@@ -4,6 +4,14 @@
 {% block title %}Yourtube{% endblock %}
 
 {% block content %}
+<style type="text/css">
+a {
+    color: black;
+    text-decoration: none;
+}
+</style>
+
+
     <div class="container">
         <div class="row">
             <div class="col">
@@ -13,18 +21,27 @@
     </div>
     <div class="container mt-2">
         {% for video in videos %}
-            <div class="row my-2">
-                <div class="col-auto">
-                    <img src="{{video.thumbnail}}"/>
+            <a target="external" href=https://youtube.com/watch?v={{video.id}}>
+            <div class="row my-3" style="background-color:#fee; border-radius: 25px">
+                <div class="col" style="border-radius: 25px  0 0 25px;padding:0; max-width:320px;min-height:180px; background-color:#555; justify-content: center; align-items: center; text-align: center">
+                    {% if video.thumbnail %}
+                        <img  style="border-radius: 25px  0 0 25px" src="{{video.thumbnail}}" />
+                    {% else %}
+                    <div style="margin-top:20%;border-radius: 25px  0 0 25px"><h1>🖼</h1></div>
+                    {% endif %}
                 </div>
-                <div class="col">
-                    {{ video.channelTitle }}<br/>
-                    <a target="external" href=https://youtube.com/watch?v={{video.id}}>
-                        {{ video.title }}
-                    </a><br/>
-                    ({{ video.duration }}) [{{ video.publishedAt }}]
+                <div class="col" style="padding:15px; position: relative">
+                    <div>
+                    <h5>{{ video.title }}</h5>
+                    </div>
+                    <div style="position: absolute; bottom: 15px">
+                        <b>{{ video.channelTitle }}</b><br/>
+                        <i>Duration: {{ video.duration }}</i><br/>
+                        <i>Published: {{ video.publishedAt }}</i>
+                    </div>
                 </div>
             </div>
+            </a>
          {% endfor %}
     </div>
 {% endblock %}
