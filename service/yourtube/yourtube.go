@@ -182,7 +182,7 @@ func videoDetails(ctx context.Context, service *youtube.Service, ids []string) [
 
 	for i := 0; i < numCalls; i++ {
 		idBatch := ids[i*perCall : (i+1)*perCall]
-		videosListCall := videosService.List([]string{"snippet", "contentDetails", "statistics"}).Id(idBatch...)
+		videosListCall := videosService.List([]string{"snippet", "contentDetails", "statistics", "player"}).Id(idBatch...)
 		videosListCall.Pages(ctx, func(response *youtube.VideoListResponse) error {
 			for _, item := range response.Items {
 				fmt.Printf("\t V>> %s %s\n", item.Snippet.Title, item.ContentDetails.Duration)

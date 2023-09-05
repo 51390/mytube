@@ -17,6 +17,12 @@ import (
 	"yourtube.51390.cloud/yourtube"
 )
 
+func contentTypeMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        w.Header().Set("Content-Type", "application/json")
+    })
+}
+
 func dbMiddleware(next http.Handler) http.Handler {
 	db, err := yourtube.InitDb()
 	yourtube.HandleError(err, "Failed initializing database")
@@ -59,6 +65,7 @@ func (vr VideoResponse) MarshalJSON() ([]byte, error) {
 	fields["tags"] = vr.Tags
 	fields["title"] = vr.Title
 	fields["viewCount"] = vr.ViewCount
+    fields["publishedAt"] = vr.PublishedAt
 
     fmt.Println("MARSHAL", fields["id"])
 
@@ -77,7 +84,6 @@ func NewVideoListResponse(videos []*yourtube.Video) (response []render.Renderer)
 	for _, video := range videos {
         fmt.Println("-->", video.Id)
         response = append(response, NewVideoResponse(video))
-        //response = append(response, NewVideoResponse(yourtube.Video{Id: video.Id}))
 	}
 
 	return

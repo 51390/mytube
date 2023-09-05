@@ -1,45 +1,60 @@
+import aiohttp
 import os
 
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
+from flask import Flask, render_template
+from flask_bootstrap import Bootstrap5
+from flask_wtf import FlaskForm, CSRFProtect
+from wtforms import StringField, SubmitField
 
-db = SQLAlchemy()
-
-class Video(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String)
-    duration = db.Column(db.Integer)
-
-
-def create_app(test_config=None):
-    # create and configure the app
+def create_app():
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
         SECRET_KEY='dev',
-        SQLALCHEMY_DATABASE_URI='postgresql://postgres:db712bccc14d602212c928a39ba7e23d@localhost',
+        API_BASE='http://localhost:3000',
     )
     app.config.from_prefixed_env(prefix='YOURTUBE')
-    db.init_app(app)
 
-    with app.app_context():
-        db.create_all()
-
-    if test_config is None:
-        # load the instance config, if it exists, when not testing
-        app.config.from_pyfile('config.py', silent=True)
-    else:
-        # load the test config if passed in
-        app.config.from_mapping(test_config)
-
-    # ensure the instance folder exists
     try:
         os.makedirs(app.instance_path)
     except OSError:
         pass
 
-    # a simple page that says hello
-    @app.route('/hello')
-    async def hello():
-        return 'Hello, World!'
-
     return app
+
+app = create_app()
+bootstrap = Bootstrap5(app)
+csrf = CSRFProtect(app)
+
+class FilterForm(FlaskForm):
+    min_duration = StringField('Minimum Duration', default='05:00')
+    max_duration = StringField('Maximum Duration', default='15:00')
+    published_since = StringField('Published Since', default='2023-08-27')
+    submit_field = SubmitField('Filter')
+
+async def fetch_videos(min_duration = None, max_duration = None, published_since = None):
+    filters = {}
+
+    if min_duration:
+        filters['duration[>=]'] = f"'{min_duration}'"
+
+    if max_duration:
+        filters['duration[<=]'] = f"'{max_duration}'"
+
+    if published_since:
+        filters['published_at[>=]'] = f"'{published_since}'"
+
+    videos_resource = f'{app.config["API_BASE"]}/videos'
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(videos_resource, params=filters) as response:
+            return await response.json()
+    
+
+@app.route('/', methods=['GET', 'POST'])
+async def root():
+    form = FilterForm()
+    if form.validate_on_submit():
+        print(f"{form.min_duration.data} / {form.max_duration.data} / {form.published_since.data}")
+    videos = await fetch_videos(
+        form.min_duration.data, form.max_duration.data, form.published_since.data)
+    return render_template('index.html', form=form, videos=videos)
