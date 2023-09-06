@@ -242,6 +242,7 @@ func videoDetails(ctx context.Context, service *youtube.Service, ids []string) [
 func Sync(userId string, tokenType string, token string) {
 	ctx := context.Background()
     ctx = context.WithValue(ctx, "userId", userId)
+
 	db, err := InitDb()
 	HandleError(err, "Failed initializing db")
 	Migrate(db)
@@ -251,15 +252,11 @@ func Sync(userId string, tokenType string, token string) {
 		log.Fatalf("Unable to read client secret file: %v", err)
 	}
 
-    fmt.Printf("%s", youtube.YoutubeReadonlyScope)
-
-	// If modifying these scopes, delete your previously saved credentials
-	// at ~/.credentials/youtube-go-quickstart.json
 	config, err := google.ConfigFromJSON(b, youtube.YoutubeReadonlyScope)
 	if err != nil {
 		log.Fatalf("Unable to parse client secret file to config: %v", err)
 	}
-	//client := getClient(ctx, config)
+
     client :=  getClientWithToken(ctx, config, tokenType, token)
 	service, err := youtube.New(client)
 

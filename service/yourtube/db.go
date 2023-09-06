@@ -2,14 +2,17 @@ package yourtube
 
 import (
 	"fmt"
+    "os"
+
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 func InitDb() (db *gorm.DB, err error) {
-	dsn := "host=localhost user=postgres password=db712bccc14d602212c928a39ba7e23d dbname=yourtube port=5432 sslmode=disable"
-	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	return
+    password := os.Getenv("POSTGRES_PASSWORD")
+    dsn := fmt.Sprintf("host=localhost user=postgres password=%s dbname=yourtube port=5432 sslmode=disable", password)
+    db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+    return
 }
 
 func Migrate(db *gorm.DB) {

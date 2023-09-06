@@ -23,6 +23,7 @@ def load_credentials(file_path):
 
 
 def create_app(app_endpoint='http://localhost', port=5000):
+    db_password = os.environ.get('POSTGRES_PASSWORD', '')
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
         SECRET_KEY='dev',
@@ -30,7 +31,7 @@ def create_app(app_endpoint='http://localhost', port=5000):
         PORT=port,
         GOOGLE_CONFIG_FILE="./client_secret.json",
         GOOGLE_REDIRECT_URI=f'{app_endpoint}:{port}',
-        SQLALCHEMY_DATABASE_URI='postgresql://postgres:db712bccc14d602212c928a39ba7e23d@localhost:5432/yourtube_app',
+        SQLALCHEMY_DATABASE_URI=f'postgresql://postgres:{db_password}@localhost:5432/yourtube_app',
         SESSION_TYPE='sqlalchemy',
     )
 
