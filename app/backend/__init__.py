@@ -59,7 +59,7 @@ class FilterForm(FlaskForm):
     published_since = StringField('Published Since', default=published_since)
     submit_field = SubmitField('Filter')
 
-async def fetch_videos(min_duration = None, max_duration = None, published_since = None):
+async def fetch_videos(user_id, min_duration = None, max_duration = None, published_since = None):
     filters = {}
 
     if min_duration:
@@ -71,7 +71,7 @@ async def fetch_videos(min_duration = None, max_duration = None, published_since
     if published_since:
         filters['published_at[>=]'] = f"'{published_since}'"
 
-    videos_resource = f'{app.config["API_BASE"]}/videos'
+    videos_resource = f'{app.config["API_BASE"]}/videos/{user_id}'
 
     async with aiohttp.ClientSession() as session:
         async with session.get(videos_resource, params=filters) as response:
@@ -79,14 +79,23 @@ async def fetch_videos(min_duration = None, max_duration = None, published_since
             return videos or []
     
 
+async def sync_videos(user_id, token):
+    videos_resource = f'{app.config["API_BASE"]}/videos/sync/{user_id}'
+    headers = {'Authorization': token}
+
+    async with aiohttp.ClientSession() as session:
+        await session.post(videos_resource, headers=headers)
+
 @app.route('/', methods=['GET', 'POST'])
 async def root():
     if not is_logged_in():
         return redirect('/login')
 
+    user_id = flask.session['user_info']['id']
+
     form = FilterForm()
     videos = await fetch_videos(
-        form.min_duration.data, form.max_duration.data, form.published_since.data)
+        user_id, form.min_duration.data, form.max_duration.data, form.published_since.data)
     return render_template('index.html', form=form, videos=videos)
 
 
@@ -95,13 +104,9 @@ def redirect_uri():
 
 def is_logged_in():
     try:
-        print(session.get('expires_at', ''))
         session_expiration = datetime.datetime.strptime(session.get('expires_at', ''), '%Y-%m-%dT%H:%M:%S')
-
-        print(datetime.datetime.utcnow() ,  session_expiration)
         return datetime.datetime.utcnow() < session_expiration
     except ValueError:
-        print('VALUE ERROR')
         return False
 
 @app.route('/login')
@@ -113,9 +118,9 @@ async def login():
     config = app.config['GOOGLE_CONFIG']
     auth_uri = config['AUTH_URI']
     client_id = config['CLIENT_ID']
-    scopes = " ".join([
-        "https://www.googleapis.com/auth/youtube.readonly",
+    scopes = "%20".join([
         "https://www.googleapis.com/auth/userinfo.profile",
+        "https://www.googleapis.com/auth/youtube.readonly",
     ])
     google_redirect = redirect_uri()
 
@@ -155,3 +160,14 @@ async def auth_code():
                 return redirect('/')
         else:
             return redirect('/login')
+
+@app.route('/sync', methods=['GET', 'POST'])
+async def sync():
+    if not is_logged_in():
+        return redirect('/login')
+
+    user_id = flask.session['user_info']['id']
+    token = json.dumps(flask.session['token'])
+    await sync_videos(user_id, token)
+
+    return redirect('/')

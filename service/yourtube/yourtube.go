@@ -40,6 +40,17 @@ func getClient(ctx context.Context, config *oauth2.Config) *http.Client {
 	return config.Client(ctx, tok)
 }
 
+func getClientWithToken(ctx context.Context, config *oauth2.Config, tokenType string, token string) *http.Client {
+    fmt.Printf(" T-> %s | %s\n", tokenType, token)
+	t := &oauth2.Token{}
+    err := json.Unmarshal([]byte(token), t)
+
+    if err != nil {
+        panic("Unable to parse")
+    }
+    return config.Client(ctx, t)
+}
+
 // getTokenFromWeb uses Config to request a Token.
 // It returns the retrieved Token.
 func getTokenFromWeb(config *oauth2.Config) *oauth2.Token {
@@ -142,7 +153,7 @@ func subscriptionsList(ctx context.Context, service *youtube.Service) {
 	call := subscriptionService.List([]string{"snippet", "contentDetails"})
 	numChannels := 0
 	channelIds := []string{}
-	call.Mine(true).Pages(ctx, func(response *youtube.SubscriptionListResponse) error {
+    err := call.Mine(true).Pages(ctx, func(response *youtube.SubscriptionListResponse) error {
 		for _, item := range response.Items {
 			numChannels += 1
 			channelId := item.Snippet.ResourceId.ChannelId
@@ -152,7 +163,11 @@ func subscriptionsList(ctx context.Context, service *youtube.Service) {
 		return nil
 	})
 
-	fmt.Println("Done")
+    if err != nil {
+        fmt.Printf(" E %s\n", err)
+    }
+
+    fmt.Printf("Loaded %d channel subscriptions\n", numChannels)
 
 	channelsListById(ctx, service, channelIds...)
 }
@@ -189,15 +204,15 @@ func videoDetails(ctx context.Context, service *youtube.Service, ids []string) [
 	numCalls := len(ids) / perCall
 	videosService := youtube.NewVideosService(service)
 	videos := []*Video{}
+    userId := ctx.Value("userId").(string)
 
 	for i := 0; i < numCalls; i++ {
 		idBatch := ids[i*perCall : (i+1)*perCall]
 		videosListCall := videosService.List([]string{"snippet", "contentDetails", "statistics", "player"}).Id(idBatch...)
 		videosListCall.Pages(ctx, func(response *youtube.VideoListResponse) error {
 			for _, item := range response.Items {
-				fmt.Printf("\t V>> %s %s\n", item.Snippet.Title, item.ContentDetails.Duration)
 				video_item := NewVideo(
-					item.Id, item.Snippet.Title, item.Snippet.Description,
+					userId, item.Id, item.Snippet.Title, item.Snippet.Description,
 					item.Snippet.ChannelId, item.Snippet.ChannelTitle,
 					item.Statistics.ViewCount, item.Statistics.LikeCount,
 					item.Statistics.CommentCount, item.Statistics.DislikeCount,
@@ -208,7 +223,13 @@ func videoDetails(ctx context.Context, service *youtube.Service, ids []string) [
 				videos = append(videos, &video_item)
 				db, ok := ctx.Value("db").(*gorm.DB)
 				if ok {
-					db.Clauses(clause.OnConflict{UpdateAll: true}).Create(&video_item)
+                    result := db.Clauses(clause.OnConflict{UpdateAll: true}).Create(&video_item)
+
+                    if result.Error != nil {
+                        fmt.Printf("Error saving %s / %s: %s\n", video_item.UserId, video_item.Id, result.Error)
+                    } else {
+                        fmt.Printf("Saved video id %s / %s: %s\n", video_item.UserId, video_item.Id)
+                    }
 				}
 			}
 			return nil
@@ -218,13 +239,19 @@ func videoDetails(ctx context.Context, service *youtube.Service, ids []string) [
 	return videos
 }
 
-func Sync(db *gorm.DB) {
+func Sync(userId string, tokenType string, token string) {
 	ctx := context.Background()
+    ctx = context.WithValue(ctx, "userId", userId)
+	db, err := InitDb()
+	HandleError(err, "Failed initializing db")
+	Migrate(db)
 
 	b, err := ioutil.ReadFile("client_secret.json")
 	if err != nil {
 		log.Fatalf("Unable to read client secret file: %v", err)
 	}
+
+    fmt.Printf("%s", youtube.YoutubeReadonlyScope)
 
 	// If modifying these scopes, delete your previously saved credentials
 	// at ~/.credentials/youtube-go-quickstart.json
@@ -232,8 +259,11 @@ func Sync(db *gorm.DB) {
 	if err != nil {
 		log.Fatalf("Unable to parse client secret file to config: %v", err)
 	}
-	client := getClient(ctx, config)
+	//client := getClient(ctx, config)
+    client :=  getClientWithToken(ctx, config, tokenType, token)
 	service, err := youtube.New(client)
+
+    fmt.Printf("Client ok\n")
 
 	HandleError(err, "Error creating YouTube client")
 
