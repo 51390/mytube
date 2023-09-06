@@ -15,9 +15,11 @@ a {
     <div class="container">
         <div class="row">
             <div class="col-auto">
-                {{ render_form(form) }}
+                {{ render_form(filter_form) }}
             </div>
-        </div>
+            <div class="col-auto">
+                {{ render_form(sync_form, action=sync_form.action) }}
+            </div>
     </div>
     <div class="container mt-2">
         {% for video in videos %}

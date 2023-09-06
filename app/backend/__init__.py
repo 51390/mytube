@@ -59,6 +59,10 @@ class FilterForm(FlaskForm):
     published_since = StringField('Published Since', default=published_since)
     submit_field = SubmitField('Filter')
 
+class SyncForm(FlaskForm):
+    action = '/sync'
+    submit_field = SubmitField('Sync')
+
 async def fetch_videos(user_id, min_duration = None, max_duration = None, published_since = None):
     filters = {}
 
@@ -96,7 +100,7 @@ async def root():
     form = FilterForm()
     videos = await fetch_videos(
         user_id, form.min_duration.data, form.max_duration.data, form.published_since.data)
-    return render_template('index.html', form=form, videos=videos)
+    return render_template('index.html', filter_form=form, sync_form=SyncForm(action='/sync'), videos=videos)
 
 
 def redirect_uri():
@@ -161,7 +165,7 @@ async def auth_code():
         else:
             return redirect('/login')
 
-@app.route('/sync', methods=['GET', 'POST'])
+@app.route('/sync', methods=['POST'])
 async def sync():
     if not is_logged_in():
         return redirect('/login')
