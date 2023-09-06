@@ -75,7 +75,8 @@ async def fetch_videos(min_duration = None, max_duration = None, published_since
 
     async with aiohttp.ClientSession() as session:
         async with session.get(videos_resource, params=filters) as response:
-            return await response.json()
+            videos = await response.json()
+            return videos or []
     
 
 @app.route('/', methods=['GET', 'POST'])
@@ -154,13 +155,3 @@ async def auth_code():
                 return redirect('/')
         else:
             return redirect('/login')
-
-
-@app.route('/user-info')
-async def user_info():
-    return {
-            "info": flask.session['user_info'],
-            "token": flask.session['token'],
-            "expires_at": flask.session['expires_at']
-    }
-
