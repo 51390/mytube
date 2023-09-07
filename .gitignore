@@ -26,3 +26,7 @@ tags
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+.env
+client_secret*.json
+service/bin

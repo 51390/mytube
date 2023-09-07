@@ -142,7 +142,6 @@ func syncVideos(w http.ResponseWriter, r *http.Request) {
 
 func main() {
     yourtube.LoadEnv()
-	// http
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(dbMiddleware)
