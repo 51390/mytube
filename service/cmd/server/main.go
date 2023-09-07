@@ -14,7 +14,7 @@ import (
 	"github.com/go-chi/render"
 	"gorm.io/gorm"
 
-	"yourtube.51390.cloud/yourtube"
+	"mytube.51390.cloud/mytube"
 )
 
 func contentTypeMiddleware(next http.Handler) http.Handler {
@@ -24,9 +24,9 @@ func contentTypeMiddleware(next http.Handler) http.Handler {
 }
 
 func dbMiddleware(next http.Handler) http.Handler {
-	db, err := yourtube.InitDb()
-	yourtube.HandleError(err, "Failed initializing database")
-	yourtube.Migrate(db)
+	db, err := mytube.InitDb()
+	mytube.HandleError(err, "Failed initializing database")
+	mytube.Migrate(db)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		timeoutContext, _ := context.WithTimeout(
@@ -47,7 +47,7 @@ func db(r *http.Request) (db *gorm.DB, err error) {
 }
 
 type VideoResponse struct {
-	*yourtube.Video
+	*mytube.Video
 }
 
 func (vr VideoResponse) MarshalJSON() ([]byte, error) {
@@ -75,11 +75,11 @@ func (vr *VideoResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func NewVideoResponse(video *yourtube.Video) *VideoResponse {
+func NewVideoResponse(video *mytube.Video) *VideoResponse {
 	return &VideoResponse{Video: video}
 }
 
-func NewVideoListResponse(videos []*yourtube.Video) (response []render.Renderer) {
+func NewVideoListResponse(videos []*mytube.Video) (response []render.Renderer) {
 	for _, video := range videos {
         response = append(response, NewVideoResponse(video))
 	}
@@ -124,7 +124,7 @@ func videos(w http.ResponseWriter, r *http.Request) {
 		db = parseFilter(db, param, value[0])
 	}
 
-	videos := []*yourtube.Video{}
+	videos := []*mytube.Video{}
 	if err = db.Find(&videos).Error; err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	} else if err = render.RenderList(w, r, NewVideoListResponse(videos)); err != nil {
@@ -137,11 +137,11 @@ func syncVideos(w http.ResponseWriter, r *http.Request) {
     token := r.Header.Get("Authorization")
     tokenType := "Bearer"
     fmt.Println("Syncing videos for", userId)
-    go yourtube.Sync(userId, tokenType, token)
+    go mytube.Sync(userId, tokenType, token)
 }
 
 func main() {
-    yourtube.LoadEnv()
+    mytube.LoadEnv()
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(dbMiddleware)

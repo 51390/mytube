@@ -1,8 +1,8 @@
 package main
 
-import "yourtube.51390.cloud/yourtube"
+import "mytube.51390.cloud/mytube"
 
 func main() {
-    yourtube.LoadEnv()
-    yourtube.Sync("", "", "")
+    mytube.LoadEnv()
+    mytube.Sync("", "", "")
 }
