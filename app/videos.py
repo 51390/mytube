@@ -5,18 +5,11 @@ import json
 import os
 
 from flask import Blueprint, render_template, redirect, request, current_app as app
+from flask_login import login_required
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField
 
 videos_blueprint = Blueprint('videos', __name__)
-
-
-def is_logged_in():
-    try:
-        session_expiration = datetime.datetime.strptime(flask.session.get('expires_at', ''), '%Y-%m-%dT%H:%M:%S')
-        return datetime.datetime.utcnow() < session_expiration
-    except ValueError:
-        return False
 
 
 def published_since(days=2):
@@ -65,10 +58,8 @@ async def sync_videos(user_id, token):
 
 
 @videos_blueprint.route('/', methods=['GET', 'POST'])
+@login_required
 async def root():
-    if not is_logged_in():
-        return redirect('/login')
-
     user_id = flask.session['user_info']['id']
 
     form = FilterForm()
@@ -78,10 +69,8 @@ async def root():
 
 
 @videos_blueprint.route('/sync', methods=['POST'])
+@login_required
 async def sync():
-    if not is_logged_in():
-        return redirect('/login')
-
     user_id = flask.session['user_info']['id']
     token = json.dumps(flask.session['token'])
     await sync_videos(user_id, token)

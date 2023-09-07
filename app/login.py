@@ -2,11 +2,35 @@ import  aiohttp
 import datetime
 
 from flask import Blueprint, redirect, request, session as flask_session, current_app as app
+from flask_login import login_user
 
 login_blueprint = Blueprint('login', __name__)
 
+
+class User:
+    def __init__(self, id):
+        self._id = id
+
+    def is_authenticated(self):
+        try:
+            session_expiration = datetime.datetime.strptime(flask.session.get('expires_at', ''), '%Y-%m-%dT%H:%M:%S')
+            return datetime.datetime.utcnow() < session_expiration
+        except ValueError:
+            return False
+
+    def is_active(self):
+        return self.is_authenticated()
+
+    def is_anonymous(self):
+        return False
+
+    def get_id(self):
+        return self._id
+
+
 def redirect_uri():
     return f'{app.config["GOOGLE_REDIRECT_URI"]}/auth-code'
+
 
 @login_blueprint.route('/login')
 async def login():
@@ -51,9 +75,8 @@ async def auth_code():
             ).strftime('%Y-%m-%dT%H:%M:%S')
             async with session.get('https://www.googleapis.com/oauth2/v1/userinfo', headers=headers) as response:
                 user_info = await response.json()
+                login_user(User(user_info['id']))
                 flask_session['user_info'] = user_info
                 return redirect('/')
         else:
             return redirect('/login')
-
-

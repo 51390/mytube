@@ -5,11 +5,12 @@ import json
 import os
 
 from flask_bootstrap import Bootstrap5
+from flask_login import LoginManager
 from flask_wtf import CSRFProtect
 from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
 
-from app.login import login_blueprint
+from app.login import login_blueprint, login, User
 from app.videos import videos_blueprint
 
 def load_credentials():
@@ -46,11 +47,19 @@ def create_app(app_endpoint='http://localhost', port=5000):
 
     bootstrap = Bootstrap5(app)
     csrf = CSRFProtect(app)
+    login_manager = LoginManager()
+    login_manager.init_app(app)
     Session(app)
 
     app.register_blueprint(login_blueprint)
     app.register_blueprint(videos_blueprint)
 
-    return app, db, bootstrap, csrf
+    login_manager.login_view = 'login.login'
 
-app, db, bootstrap, csrf = create_app()
+    return app, db, bootstrap, csrf, login_manager
+
+app, db, bootstrap, csrf, login_manager = create_app()
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User(user_id)
