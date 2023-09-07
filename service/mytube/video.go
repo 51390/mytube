@@ -9,7 +9,7 @@ import (
 type Video struct {
 	gorm.Model
 
-    UserId        string `gorm:"primaryKey"`
+	UserId        string `gorm:"primaryKey"`
 	Id            string `gorm:"primaryKey"`
 	ChannelId     string
 	ChannelTitle  string
@@ -23,7 +23,7 @@ type Video struct {
 	Tags          string
 	Title         string
 	ViewCount     uint64
-    Thumbnail     string
+	Thumbnail     string
 }
 
 func NewVideo(userId string, id string, title string, description string,
@@ -37,7 +37,7 @@ func NewVideo(userId string, id string, title string, description string,
 		durationString = fmt.Sprintf("%02d:%02d:%02d", uint64(d.Hours), uint64(d.Minutes), uint64(d.Seconds))
 	}
 	return Video{
-        UserId:        userId,
+		UserId:        userId,
 		Id:            id,
 		Title:         title,
 		Description:   description,
@@ -50,6 +50,6 @@ func NewVideo(userId string, id string, title string, description string,
 		PublishedAt:   publishedAt,
 		ViewCount:     viewCount,
 		Duration:      durationString,
-        Thumbnail:     thumbnail,
+		Thumbnail:     thumbnail,
 	}
 }

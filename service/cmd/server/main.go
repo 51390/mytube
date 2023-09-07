@@ -18,9 +18,9 @@ import (
 )
 
 func contentTypeMiddleware(next http.Handler) http.Handler {
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        w.Header().Set("Content-Type", "application/json")
-    })
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+	})
 }
 
 func dbMiddleware(next http.Handler) http.Handler {
@@ -65,8 +65,8 @@ func (vr VideoResponse) MarshalJSON() ([]byte, error) {
 	fields["tags"] = vr.Tags
 	fields["title"] = vr.Title
 	fields["viewCount"] = vr.ViewCount
-    fields["publishedAt"] = vr.PublishedAt
-    fields["thumbnail"] = vr.Thumbnail
+	fields["publishedAt"] = vr.PublishedAt
+	fields["thumbnail"] = vr.Thumbnail
 
 	return json.Marshal(fields)
 }
@@ -81,7 +81,7 @@ func NewVideoResponse(video *mytube.Video) *VideoResponse {
 
 func NewVideoListResponse(videos []*mytube.Video) (response []render.Renderer) {
 	for _, video := range videos {
-        response = append(response, NewVideoResponse(video))
+		response = append(response, NewVideoResponse(video))
 	}
 
 	return
@@ -105,7 +105,7 @@ func parseFilter(db *gorm.DB, filter string, value string) *gorm.DB {
 }
 
 func videos(w http.ResponseWriter, r *http.Request) {
-    userId := chi.URLParam(r, "userId")
+	userId := chi.URLParam(r, "userId")
 	err := r.ParseForm()
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -118,7 +118,7 @@ func videos(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-    db = db.Where("user_id = ?", userId)
+	db = db.Where("user_id = ?", userId)
 
 	for param, value := range r.Form {
 		db = parseFilter(db, param, value[0])
@@ -133,19 +133,19 @@ func videos(w http.ResponseWriter, r *http.Request) {
 }
 
 func syncVideos(w http.ResponseWriter, r *http.Request) {
-    userId := chi.URLParam(r, "userId")
-    token := r.Header.Get("Authorization")
-    tokenType := "Bearer"
-    fmt.Println("Syncing videos for", userId)
-    go mytube.Sync(userId, tokenType, token)
+	userId := chi.URLParam(r, "userId")
+	token := r.Header.Get("Authorization")
+	tokenType := "Bearer"
+	fmt.Println("Syncing videos for", userId)
+	go mytube.Sync(userId, tokenType, token)
 }
 
 func main() {
-    mytube.LoadEnv()
+	mytube.LoadEnv()
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(dbMiddleware)
 	r.Get("/videos/{userId}", videos)
-    r.Post("/videos/sync/{userId}", syncVideos)
+	r.Post("/videos/sync/{userId}", syncVideos)
 	http.ListenAndServe(":3000", r)
 }

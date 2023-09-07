@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-    "os"
+	"os"
 	"strings"
 
 	"golang.org/x/net/context"
@@ -19,11 +19,11 @@ import (
 
 func getClientWithToken(ctx context.Context, config *oauth2.Config, tokenType string, token string) *http.Client {
 	t := &oauth2.Token{}
-    err := json.Unmarshal([]byte(token), t)
-    if err != nil {
-        log.Fatalf("Unable to parse token: %s", token)
-    }
-    return config.Client(ctx, t)
+	err := json.Unmarshal([]byte(token), t)
+	if err != nil {
+		log.Fatalf("Unable to parse token: %s", token)
+	}
+	return config.Client(ctx, t)
 }
 
 func HandleError(err error, message string) {
@@ -35,7 +35,7 @@ func HandleError(err error, message string) {
 	}
 }
 
-func channelsListById(ctx context.Context, service *youtube.Service, id ...string) *[]string{
+func channelsListById(ctx context.Context, service *youtube.Service, id ...string) *[]string {
 	perCall := 50
 	numCalls := len(id) / perCall
 	playlistIds := []string{}
@@ -49,12 +49,12 @@ func channelsListById(ctx context.Context, service *youtube.Service, id ...strin
 				playlistIds = append(playlistIds, relatedPlaylists.Uploads, relatedPlaylists.Likes, relatedPlaylists.Favorites)
 			}
 
-            log.Printf("%d playlists loaded.", len(playlistIds))
+			log.Printf("%d playlists loaded.", len(playlistIds))
 			return nil
 		})
 	}
 
-    return &playlistIds
+	return &playlistIds
 }
 
 func subscriptionsList(ctx context.Context, service *youtube.Service) *[]string {
@@ -62,21 +62,21 @@ func subscriptionsList(ctx context.Context, service *youtube.Service) *[]string 
 	call := subscriptionService.List([]string{"snippet", "contentDetails"})
 	numChannels := 0
 	channelIds := []string{}
-    err := call.Mine(true).Pages(ctx, func(response *youtube.SubscriptionListResponse) error {
+	err := call.Mine(true).Pages(ctx, func(response *youtube.SubscriptionListResponse) error {
 		for _, item := range response.Items {
 			numChannels += 1
 			channelId := item.Snippet.ResourceId.ChannelId
 			channelIds = append(channelIds, channelId)
 		}
-        log.Printf("%d channels loaded.", len(channelIds))
+		log.Printf("%d channels loaded.", len(channelIds))
 		return nil
 	})
 
-    if err != nil {
-        log.Printf("Failed loading channel subscriptions: %s\n", err)
-    }
+	if err != nil {
+		log.Printf("Failed loading channel subscriptions: %s\n", err)
+	}
 
-    return &channelIds
+	return &channelIds
 }
 
 func playlistItemsByPlaylistId(ctx context.Context, service *youtube.Service, playlistIds ...string) *[]string {
@@ -88,23 +88,23 @@ func playlistItemsByPlaylistId(ctx context.Context, service *youtube.Service, pl
 			for _, item := range response.Items {
 				videoIds = append(videoIds, item.ContentDetails.VideoId)
 			}
-            log.Printf("%d videos loaded.", len(videoIds))
+			log.Printf("%d videos loaded.", len(videoIds))
 
 			return errors.New("first page loaded")
 		})
 	}
 
-    return &videoIds
+	return &videoIds
 }
 
 func thumbnailUrl(video *youtube.Video) string {
-    if video.Snippet.Thumbnails.Medium != nil {
-        return video.Snippet.Thumbnails.Medium.Url
-    } else if video.Snippet.Thumbnails.Default != nil {
-        return video.Snippet.Thumbnails.Default.Url
-    } else {
-        return ""
-    }
+	if video.Snippet.Thumbnails.Medium != nil {
+		return video.Snippet.Thumbnails.Medium.Url
+	} else if video.Snippet.Thumbnails.Default != nil {
+		return video.Snippet.Thumbnails.Default.Url
+	} else {
+		return ""
+	}
 }
 
 func videoDetails(ctx context.Context, service *youtube.Service, ids []string) {
@@ -112,7 +112,7 @@ func videoDetails(ctx context.Context, service *youtube.Service, ids []string) {
 	numCalls := len(ids) / perCall
 	videosService := youtube.NewVideosService(service)
 	videos := []*Video{}
-    userId := ctx.Value("userId").(string)
+	userId := ctx.Value("userId").(string)
 
 	for i := 0; i < numCalls; i++ {
 		idBatch := ids[i*perCall : (i+1)*perCall]
@@ -126,20 +126,20 @@ func videoDetails(ctx context.Context, service *youtube.Service, ids []string) {
 					item.Statistics.CommentCount, item.Statistics.DislikeCount,
 					item.Statistics.FavoriteCount, item.ContentDetails.Duration,
 					item.Snippet.PublishedAt, strings.Join(item.Snippet.Tags, ","),
-                    thumbnailUrl(item),
+					thumbnailUrl(item),
 				)
 				videos = append(videos, &video_item)
 				db, ok := ctx.Value("db").(*gorm.DB)
 				if ok {
-                    result := db.Clauses(clause.OnConflict{UpdateAll: true}).Create(&video_item)
-                    if result.Error != nil {
-                        log.Printf("Error saving %s / %s: %s\n", video_item.UserId, video_item.Id, result.Error)
-                    } else {
-                        log.Printf("Saved video id %s / %s\n", video_item.UserId, video_item.Id)
-                    }
+					result := db.Clauses(clause.OnConflict{UpdateAll: true}).Create(&video_item)
+					if result.Error != nil {
+						log.Printf("Error saving %s / %s: %s\n", video_item.UserId, video_item.Id, result.Error)
+					} else {
+						log.Printf("Saved video id %s / %s\n", video_item.UserId, video_item.Id)
+					}
 				} else {
-                    log.Printf("Unable to get db connection from context, skipping.")
-                }
+					log.Printf("Unable to get db connection from context, skipping.")
+				}
 			}
 			return nil
 		})
@@ -147,7 +147,7 @@ func videoDetails(ctx context.Context, service *youtube.Service, ids []string) {
 }
 
 func configToJson() string {
-    json := `{
+	json := `{
 
         "installed": {
             "client_id": "%s",
@@ -160,32 +160,32 @@ func configToJson() string {
         }
     }`
 
-    return fmt.Sprintf(json, os.Getenv("CLIENT_ID"), os.Getenv("CLIENT_SECRET"), os.Getenv("PROJECT_ID"), os.Getenv("AUTH_URI"), os.Getenv("TOKEN_URI"), os.Getenv("AUTH_PROVIDER_X509_CERT_URL"), os.Getenv("REDIRECT_URIS"))
+	return fmt.Sprintf(json, os.Getenv("CLIENT_ID"), os.Getenv("CLIENT_SECRET"), os.Getenv("PROJECT_ID"), os.Getenv("AUTH_URI"), os.Getenv("TOKEN_URI"), os.Getenv("AUTH_PROVIDER_X509_CERT_URL"), os.Getenv("REDIRECT_URIS"))
 }
 
 func Sync(userId string, tokenType string, token string) {
 	ctx := context.Background()
-    ctx = context.WithValue(ctx, "userId", userId)
+	ctx = context.WithValue(ctx, "userId", userId)
 
 	db, err := InitDb()
 	HandleError(err, "Failed initializing db")
 	Migrate(db)
-    ctx = context.WithValue(ctx, "db", db)
+	ctx = context.WithValue(ctx, "db", db)
 
-    configJson := configToJson()
+	configJson := configToJson()
 	config, err := google.ConfigFromJSON([]byte(configJson), youtube.YoutubeReadonlyScope)
 	if err != nil {
 		log.Fatalf("Unable to parse client secret file to config: %v", err)
 	}
 
-    client :=  getClientWithToken(ctx, config, tokenType, token)
+	client := getClientWithToken(ctx, config, tokenType, token)
 	service, err := youtube.New(client)
 
 	HandleError(err, "Error creating YouTube client")
 
-    channelIds := subscriptionsList(ctx, service)
-    playlistIds := channelsListById(ctx, service, *channelIds...)
-    videoIds := playlistItemsByPlaylistId(ctx, service, *playlistIds...)
+	channelIds := subscriptionsList(ctx, service)
+	playlistIds := channelsListById(ctx, service, *channelIds...)
+	videoIds := playlistItemsByPlaylistId(ctx, service, *playlistIds...)
 	videoDetails(ctx, service, *videoIds)
 }
 

@@ -13,8 +13,8 @@ bin/server: bin $(SOURCES)
 bin:
 	mkdir bin
 
-format: cmd yourtube
-	gofmt -w cmd yourtube
+format: cmd mytube
+	gofmt -w cmd mytube
 
 clean:
 	rm -rf bin
