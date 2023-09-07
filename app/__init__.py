@@ -11,6 +11,8 @@ from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
 from wtforms import StringField, SubmitField
 
+from app.login import login_blueprint
+
 def load_credentials(file_path):
     if os.path.isfile(file_path):
         with open(file_path, 'r') as secret:
@@ -45,9 +47,11 @@ def create_app(app_endpoint='http://localhost', port=5000):
     csrf = CSRFProtect(app)
     Session(app)
 
+    app.register_blueprint(login_blueprint)
+
     return app, db, bootstrap, csrf
 
-app, db, booetstrap, csrf = create_app()
+app, db, bootstrap, csrf = create_app()
 
 def published_since(days=2):
     since = datetime.datetime.today() - datetime.timedelta(days=2)
@@ -104,8 +108,6 @@ async def root():
     return render_template('index.html', filter_form=form, sync_form=SyncForm(action='/sync'), videos=videos)
 
 
-def redirect_uri():
-    return f'{app.config["GOOGLE_REDIRECT_URI"]}/auth-code'
 
 def is_logged_in():
     try:
@@ -113,58 +115,6 @@ def is_logged_in():
         return datetime.datetime.utcnow() < session_expiration
     except ValueError:
         return False
-
-@app.route('/login')
-async def login():
-
-    if is_logged_in():
-        return redirect('/')
-
-    config = app.config['GOOGLE_CONFIG']
-    auth_uri = config['AUTH_URI']
-    client_id = config['CLIENT_ID']
-    scopes = "%20".join([
-        "https://www.googleapis.com/auth/userinfo.profile",
-        "https://www.googleapis.com/auth/youtube.readonly",
-    ])
-    google_redirect = redirect_uri()
-
-    uri = f'{auth_uri}?client_id={client_id}&redirect_uri={google_redirect}&scope={scopes}&response_type=code'
-
-    return redirect(uri)
-
-@app.route('/auth-code')
-async def auth_code():
-    timestamp = datetime.datetime.utcnow()
-    config = app.config['GOOGLE_CONFIG']
-    token_uri = config['TOKEN_URI']
-    token_params = {
-        'code': request.args.get('code'),
-        'client_id': config['CLIENT_ID'],
-        'client_secret': config['CLIENT_SECRET'],
-        'redirect_uri': redirect_uri(),
-        'grant_type': 'authorization_code',
-    }
-
-    data = aiohttp.FormData(token_params)
-
-    async with aiohttp.ClientSession() as session:
-        headers = {}
-        async with session.post(token_uri, data=data) as response:
-            token_data = await response.json()
-            flask.session['token'] = token_data
-            headers['Authorization'] = f'Bearer {token_data["access_token"]}'
-
-        if token_data:
-            flask.session['expires_at'] = (
-                timestamp + datetime.timedelta(seconds=token_data['expires_in'])
-            ).strftime('%Y-%m-%dT%H:%M:%S')
-            async with session.get('https://www.googleapis.com/oauth2/v1/userinfo', headers=headers) as response:
-                user_info = await response.json()
-                flask.session['user_info'] = user_info
-                return redirect('/')
-        else:
-            return redirect('/login')
 
 @app.route('/sync', methods=['POST'])
 async def sync():
