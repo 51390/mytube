@@ -1,8 +1,14 @@
-.phony: .env run-service run-app init-app build-service
+.phony: .env run-service run-app init-app build-service run-db db-down
 
 MD5 := $(shell test `uname` = Linux && echo md5sum || echo md5)
 
 all: .env
+
+run-db: .env
+	docker compose up
+
+db-down: .env
+	docker compose down
 
 run-app: .env
 	flask -e .env --app app run --debug
