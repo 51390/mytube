@@ -1,4 +1,4 @@
-package yourtube
+package mytube
 
 import (
 	"encoding/json"

@@ -1,4 +1,4 @@
-module yourtube.51390.cloud
+module mytube.51390.cloud
 
 go 1.21.0
 

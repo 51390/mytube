@@ -34,7 +34,7 @@ def create_app(app_endpoint='http://localhost', port=5000):
         API_BASE='http://localhost:3000',
         PORT=port,
         GOOGLE_REDIRECT_URI=f'{app_endpoint}:{port}',
-        SQLALCHEMY_DATABASE_URI=f'postgresql://postgres:{db_password}@localhost:5432/yourtube_app',
+        SQLALCHEMY_DATABASE_URI=f'postgresql://postgres:{db_password}@localhost:5432/mytube_app',
         SESSION_TYPE='sqlalchemy',
     )
 

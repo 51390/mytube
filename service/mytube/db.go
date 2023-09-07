@@ -1,4 +1,4 @@
-package yourtube
+package mytube
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 
 func InitDb() (db *gorm.DB, err error) {
     password := os.Getenv("POSTGRES_PASSWORD")
-    dsn := fmt.Sprintf("host=localhost user=postgres password=%s dbname=yourtube port=5432 sslmode=disable", password)
+    dsn := fmt.Sprintf("host=localhost user=postgres password=%s dbname=mytube_service port=5432 sslmode=disable", password)
     db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
     return
 }
