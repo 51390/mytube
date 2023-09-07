@@ -8,7 +8,8 @@ run-app: .env
 	flask -e .env --app app run --debug
 
 init-app: .env
-	echo 'db.create_all()' | flask --app app shell
+	pip install -r app/requirements.txt
+	echo 'db.create_all()' | flask -e .env --app app shell
 
 run-service: build-service .env
 	./service/bin/server
