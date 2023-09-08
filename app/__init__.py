@@ -62,4 +62,8 @@ app, db, bootstrap, csrf, login_manager = create_app()
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User(user_id)
+    user = User(user_id)
+    if user.is_authenticated():
+        return user
+    else:
+        return None

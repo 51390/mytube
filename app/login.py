@@ -13,7 +13,8 @@ class User:
 
     def is_authenticated(self):
         try:
-            session_expiration = datetime.datetime.strptime(flask.session.get('expires_at', ''), '%Y-%m-%dT%H:%M:%S')
+            print(flask_session.get('expires_at'))
+            session_expiration = datetime.datetime.strptime(flask_session.get('expires_at', ''), '%Y-%m-%dT%H:%M:%S')
             return datetime.datetime.utcnow() < session_expiration
         except ValueError:
             return False
