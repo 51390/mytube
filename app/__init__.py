@@ -46,9 +46,9 @@ def create_app(app_endpoint='http://localhost', port=5000):
     app.config.from_mapping(**load_credentials())
 
     bootstrap = Bootstrap5(app)
-    csrf = CSRFProtect(app)
     login_manager = LoginManager()
     login_manager.init_app(app)
+    csrf = CSRFProtect(app)
     Session(app)
 
     app.register_blueprint(login_blueprint)
