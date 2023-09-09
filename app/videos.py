@@ -2,6 +2,7 @@ import aiohttp
 import datetime
 import flask
 import json
+import jwt
 import os
 
 from flask import Blueprint, render_template, redirect, request, current_app as app
@@ -51,10 +52,15 @@ async def fetch_videos(user_id, min_duration = None, max_duration = None, publis
 
 async def sync_videos(user_id, token):
     videos_resource = f'{app.config["API_BASE"]}/videos/sync/{user_id}'
-    headers = {'Authorization': token}
+    headers = {'user-token': token}
 
     async with aiohttp.ClientSession() as session:
         await session.post(videos_resource, headers=headers)
+
+
+def jwt_access_token(token):
+    key = app.config['JWT_TOKEN_SECRET']
+    return jwt.encode({"token": json.dumps(token)}, key, algorithm='HS256')
 
 
 @videos_blueprint.route('/', methods=['GET', 'POST'])
@@ -72,7 +78,7 @@ async def root():
 @login_required
 async def sync():
     user_id = flask.session['user_info']['id']
-    token = json.dumps(flask.session['token'])
+    token = jwt_access_token(flask.session['token'])
     await sync_videos(user_id, token)
 
     return redirect('/')

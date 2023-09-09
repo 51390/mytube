@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+    "github.com/golang-jwt/jwt/v5"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -17,7 +18,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func getClientWithToken(ctx context.Context, config *oauth2.Config, tokenType string, token string) *http.Client {
+func getClientWithToken(ctx context.Context, config *oauth2.Config, token string) *http.Client {
 	t := &oauth2.Token{}
 	err := json.Unmarshal([]byte(token), t)
 	if err != nil {
@@ -148,7 +149,6 @@ func videoDetails(ctx context.Context, service *youtube.Service, ids []string) {
 
 func configToJson() string {
 	json := `{
-
         "installed": {
             "client_id": "%s",
             "client_secret": "%s",
@@ -163,13 +163,38 @@ func configToJson() string {
 	return fmt.Sprintf(json, os.Getenv("CLIENT_ID"), os.Getenv("CLIENT_SECRET"), os.Getenv("PROJECT_ID"), os.Getenv("AUTH_URI"), os.Getenv("TOKEN_URI"), os.Getenv("AUTH_PROVIDER_X509_CERT_URL"), os.Getenv("REDIRECT_URIS"))
 }
 
-func Sync(userId string, tokenType string, token string) {
+func decodeJwt(encodedToken string) (string, error) {
+    token, err := jwt.Parse(encodedToken, func(token *jwt.Token) (interface{}, error) {
+        if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+            return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+        }
+
+        return []byte(os.Getenv("JWT_TOKEN_SECRET")), nil
+    })
+
+    if err != nil {
+        return "", err
+    }
+
+    if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+        return claims["token"].(string), nil
+    } else {
+        return "", fmt.Errorf("Invalid token")
+    }
+}
+
+func Sync(userId string, token string) {
+    access_token, err := decodeJwt(token)
+
+    if err != nil {
+        log.Fatalf("Failed decoding jwt token to perform the sync with: %s", err)
+    }
+
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, "userId", userId)
 
 	db, err := InitDb()
 	HandleError(err, "Failed initializing db")
-	Migrate(db)
 	ctx = context.WithValue(ctx, "db", db)
 
 	configJson := configToJson()
@@ -178,7 +203,7 @@ func Sync(userId string, tokenType string, token string) {
 		log.Fatalf("Unable to parse client secret file to config: %v", err)
 	}
 
-	client := getClientWithToken(ctx, config, tokenType, token)
+	client := getClientWithToken(ctx, config, access_token)
 	service, err := youtube.New(client)
 
 	HandleError(err, "Error creating YouTube client")

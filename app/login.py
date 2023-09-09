@@ -60,7 +60,6 @@ async def auth_code():
         'redirect_uri': redirect_uri(),
         'grant_type': 'authorization_code',
     }
-
     data = aiohttp.FormData(token_params)
 
     async with aiohttp.ClientSession() as session:
@@ -68,7 +67,7 @@ async def auth_code():
         async with session.post(token_uri, data=data) as response:
             token_data = await response.json()
             flask_session['token'] = token_data
-            headers['Authorization'] = f'Bearer {token_data["access_token"]}'
+            headers['Authorization'] = f'{token_data["token_type"]} {token_data["access_token"]}'
 
         if token_data:
             flask_session['expires_at'] = (

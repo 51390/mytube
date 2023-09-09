@@ -134,10 +134,9 @@ func videos(w http.ResponseWriter, r *http.Request) {
 
 func syncVideos(w http.ResponseWriter, r *http.Request) {
 	userId := chi.URLParam(r, "userId")
-	token := r.Header.Get("Authorization")
-	tokenType := "Bearer"
+	token := r.Header.Get("user-token")
 	fmt.Println("Syncing videos for", userId)
-	go mytube.Sync(userId, tokenType, token)
+	go mytube.Sync(userId, token)
 }
 
 func main() {
