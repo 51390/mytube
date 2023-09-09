@@ -12,6 +12,7 @@ cachelib==0.10.2
 cffi==1.15.1
 charset-normalizer==3.2.0
 click==8.1.7
+cryptography==41.0.3
 dominate==2.8.0
 Flask==2.3.3
 Flask-Login==0.6.2
@@ -29,6 +30,7 @@ multidict==6.0.4
 psycopg2==2.9.7
 pycares==4.3.0
 pycparser==2.21
+PyJWT==2.8.0
 python-dotenv==1.0.0
 SQLAlchemy==2.0.20
 typing_extensions==4.7.1
