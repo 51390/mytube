@@ -32,6 +32,7 @@ def create_app(app_endpoint='http://localhost', port=5000):
     app = flask.Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
         SECRET_KEY='dev',
+        JWT_TOKEN_SECRET=os.environ.get('JWT_TOKEN_SECRET'),
         API_BASE='http://localhost:3000',
         PORT=port,
         GOOGLE_REDIRECT_URI=f'{app_endpoint}:{port}',

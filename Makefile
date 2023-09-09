@@ -25,5 +25,6 @@ build-service:
 
 .env:
 	@echo "POSTGRES_PASSWORD=$(shell head -n 1024 /dev/urandom | $(MD5) | sed 's/ .*//g')" > .env
+	@echo "JWT_TOKEN_SECRET=$(shell head -n 1024 /dev/urandom | $(MD5) | sed 's/ .*//g')" >> .env
 	@cat  client_secret.json | jq -c '.["installed"]' | tr ',' '\n' | sed 's/[{}]//g' | sed 's/^"//g' | sed 's/":/ /g' | awk '{ print toupper($$1) "=" $$2}' >> .env
 
