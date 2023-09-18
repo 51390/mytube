@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   app:
+    image: ${COMPOSE_PROJECT_NAME}-app
     build: ./app
     env_file:
       - .env
@@ -14,6 +15,7 @@ services:
       - service
 
   service:
+    image: ${COMPOSE_PROJECT_NAME}-service
     build: ./service
     env_file:
       - .env
@@ -25,7 +27,8 @@ services:
       - db
 
   db:
-    image: postgres
+    image: ${COMPOSE_PROJECT_NAME}-db
+    build: ./db
     env_file:
       - .env
     networks:
