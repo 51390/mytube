@@ -9,6 +9,11 @@ variable "organization" {
   default = "51390"
 }
 
+variable "docker_host" {
+  type = string
+  default = "unix:///var/run/docker.sock"
+}
+
 variable "region" {
   type = string
   default = "sa-east-1"
@@ -34,9 +39,13 @@ terraform {
 
     docker = {
       source  = "kreuzwerker/docker"
-        version = "3.0.2"
+      version = "3.0.2"
     }
   }
+}
+
+provider "docker" {
+  host = var.docker_host
 }
 
 provider "aws" {
@@ -167,6 +176,112 @@ resource "null_resource" "push_images" {
       docker push ${aws_ecr_repository.db.repository_url}
     EOT
   }
+}
+
+resource "aws_iam_role" "eks_iam_role" {
+ name = "devopsthehardway-eks-iam-role"
+
+ path = "/"
+
+ assume_role_policy = <<EOF
+{
+ "Version": "2012-10-17",
+ "Statement": [
+  {
+   "Effect": "Allow",
+   "Principal": {
+    "Service": "eks.amazonaws.com"
+   },
+   "Action": "sts:AssumeRole"
+  }
+ ]
+}
+EOF
+
+}
+
+resource "aws_iam_role_policy_attachment" "AmazonEKSClusterPolicy" {
+ policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+ role    = aws_iam_role.eks_iam_role.name
+}
+resource "aws_iam_role_policy_attachment" "AmazonEC2ContainerRegistryReadOnly-EKS" {
+ policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+ role    = aws_iam_role.eks_iam_role.name
+}
+
+resource "aws_eks_cluster" "mytube" {
+ name = var.name
+ role_arn = aws_iam_role.eks_iam_role.arn
+
+ vpc_config {
+  subnet_ids = module.vpc.private_subnets
+ }
+
+ depends_on = [
+  aws_iam_role.eks_iam_role,
+ ]
+}
+
+resource "aws_iam_role" "eks_worker_iam_role" {
+  name = "eks-node-group-example"
+
+    assume_role_policy = jsonencode({
+        Statement = [{
+          Action = "sts:AssumeRole"
+          Effect = "Allow"
+          Principal = {
+            Service = "ec2.amazonaws.com"
+          }
+        }]
+        Version = "2012-10-17"
+    })
+}
+
+ 
+resource "aws_iam_role_policy_attachment" "AmazonEKSWorkerNodePolicy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+  role    = aws_iam_role.eks_worker_iam_role.name
+}
+
+resource "aws_iam_role_policy_attachment" "AmazonEKS_CNI_Policy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+  role    = aws_iam_role.eks_worker_iam_role.name
+}
+
+resource "aws_iam_role_policy_attachment" "EC2InstanceProfileForImageBuilderECRContainerBuilds" {
+  policy_arn = "arn:aws:iam::aws:policy/EC2InstanceProfileForImageBuilderECRContainerBuilds"
+  role    = aws_iam_role.eks_worker_iam_role.name
+}
+
+resource "aws_iam_role_policy_attachment" "AmazonEC2ContainerRegistryReadOnly" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+  role    = aws_iam_role.eks_worker_iam_role.name
+}
+
+resource "aws_eks_node_group" "mytube" {
+  cluster_name = var.name
+  node_group_name = "service"
+  subnet_ids = module.vpc.private_subnets
+  node_role_arn = aws_iam_role.eks_worker_iam_role.arn
+  instance_types = ["t2.micro"]
+
+  scaling_config {
+    desired_size = 1
+    max_size     = 2
+    min_size     = 1
+  }
+
+  update_config {
+    max_unavailable = 1
+  }
+
+  depends_on = [
+   aws_iam_role_policy_attachment.AmazonEKSWorkerNodePolicy,
+   aws_iam_role_policy_attachment.AmazonEKS_CNI_Policy,
+   aws_iam_role_policy_attachment.EC2InstanceProfileForImageBuilderECRContainerBuilds,
+   aws_iam_role_policy_attachment.AmazonEC2ContainerRegistryReadOnly,
+   aws_eks_cluster.mytube,
+  ]
 }
 
 output "app_repository_url" {
