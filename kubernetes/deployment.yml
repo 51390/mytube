@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mytube-deployment
+  namespace: mytube
+  labels:
+    app: mytube
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mytube
+  template:
+    metadata:
+      labels:
+        app: mytube
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/arch
+                operator: In
+                values:
+                - amd64
+      containers:
+      - name: db
+        image: 471976620771.dkr.ecr.sa-east-1.amazonaws.com/mytube-db
+        ports:
+        - name: http
+          containerPort: 5432
+        imagePullPolicy: IfNotPresent
+        command: ["uname", "-a"]
+      nodeSelector:
+        kubernetes.io/os: linux
