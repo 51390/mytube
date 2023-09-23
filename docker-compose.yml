@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   app:
+    platform: linux/amd64
     image: ${COMPOSE_PROJECT_NAME}-app
     build: ./app
     env_file:
@@ -15,6 +16,7 @@ services:
       - service
 
   service:
+    platform: linux/amd64
     image: ${COMPOSE_PROJECT_NAME}-service
     build: ./service
     env_file:
@@ -27,6 +29,7 @@ services:
       - db
 
   db:
+    platform: linux/amd64
     image: ${COMPOSE_PROJECT_NAME}-db
     build: ./db
     env_file:
