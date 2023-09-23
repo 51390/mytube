@@ -64,6 +64,20 @@ module "vpc" {
         Terraform = "true"
         Environment = "dev"
     }
+
+    enable_nat_gateway = true
+    single_nat_gateway = true
+    enable_dns_hostnames = true
+
+    public_subnet_tags = {
+      "kubernetes.io/cluster/${var.name}" = "shared"
+        "kubernetes.io/role/elb"                      = 1
+    }
+
+    private_subnet_tags = {
+      "kubernetes.io/cluster/${var.name}" = "shared"
+        "kubernetes.io/role/internal-elb"             = 1
+    }
 }
 
 resource "aws_ecr_repository" "app" {
@@ -214,7 +228,9 @@ resource "aws_eks_cluster" "mytube" {
  role_arn = aws_iam_role.eks_iam_role.arn
 
  vpc_config {
-  subnet_ids = module.vpc.private_subnets
+   subnet_ids = module.vpc.private_subnets
+   endpoint_private_access = true
+   endpoint_public_access  = true
  }
 
  depends_on = [
@@ -278,7 +294,6 @@ resource "aws_eks_node_group" "mytube" {
   depends_on = [
    aws_iam_role_policy_attachment.AmazonEKSWorkerNodePolicy,
    aws_iam_role_policy_attachment.AmazonEKS_CNI_Policy,
-   aws_iam_role_policy_attachment.EC2InstanceProfileForImageBuilderECRContainerBuilds,
    aws_iam_role_policy_attachment.AmazonEC2ContainerRegistryReadOnly,
    aws_eks_cluster.mytube,
   ]
