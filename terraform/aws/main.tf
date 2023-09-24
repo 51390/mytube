@@ -279,7 +279,7 @@ resource "aws_eks_node_group" "mytube" {
   node_group_name = "service"
   subnet_ids = module.vpc.private_subnets
   node_role_arn = aws_iam_role.eks_worker_iam_role.arn
-  instance_types = ["t2.micro"]
+  instance_types = ["t3.small"]
 
   scaling_config {
     desired_size = 1
