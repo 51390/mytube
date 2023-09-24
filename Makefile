@@ -13,6 +13,15 @@ run: .env
 down: .env
 	docker compose down
 
+kubectl-config:
+	aws eks update-kubeconfig --region sa-east-1 --name mytube
+
+kubectl-namespace:
+	kubectl create namespace mytube
+
+kubectl-secrets:
+	kubectl -n mytube create secret generic credentials --from-env-file=.env
+
 .env:
 	@echo "POSTGRES_PASSWORD=$(shell head -n 1024 /dev/urandom | $(MD5) | sed 's/ .*//g')" > .env
 	@echo "POSTGRES_USER"="postgres" >> .env
