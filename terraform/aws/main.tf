@@ -25,6 +25,17 @@ variable "azs" {
     default = ["sa-east-1a", "sa-east-1b"]
 }
 
+variable "POSTGRES_USER" {
+  description = "username for the admin of the pgsql db"
+  type = string
+  default = "postgres"
+}
+
+variable "POSTGRES_PASSWORD" {
+  description = "password for the admin user"
+  type = string
+}
+
 locals {
     docker_login_cmd = "aws ecr get-login-password --region ${var.region}"
 }
@@ -55,10 +66,11 @@ provider "aws" {
 module "vpc" {
     source = "terraform-aws-modules/vpc/aws"
     name = "${var.name}-vpc"
-    cidr = "10.0.0.0/24"
+    cidr = "10.0.0.0/16"
     azs = var.azs
-    private_subnets = ["10.0.0.0/26", "10.0.0.64/26"]
-    public_subnets = ["10.0.0.128/26", "10.0.0.192/26"]
+    private_subnets = ["10.0.1.0/24", "10.0.2.0/24"]
+    public_subnets = ["10.0.3.0/24","10.0.4.0/24"]
+    database_subnets = ["10.0.5.0/24", "10.0.6.0/24"]
 
     tags = {
         Terraform = "true"
@@ -297,6 +309,18 @@ resource "aws_eks_node_group" "mytube" {
    aws_iam_role_policy_attachment.AmazonEC2ContainerRegistryReadOnly,
    aws_eks_cluster.mytube,
   ]
+}
+
+resource "aws_db_instance" "db-2" {
+  allocated_storage    = 15
+  db_name              = "${var.name}_db"
+  engine               = "postgres"
+  engine_version       = "15.4"
+  instance_class       = "db.t3.micro"
+  username             = var.POSTGRES_USER
+  password             = var.POSTGRES_PASSWORD
+  skip_final_snapshot  = true
+  db_subnet_group_name = module.vpc.database_subnet_group_name
 }
 
 output "app_repository_url" {
