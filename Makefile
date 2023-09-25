@@ -24,6 +24,14 @@ kubectl-namespace:
 kubectl-secrets:
 	kubectl -n mytube create secret generic credentials --from-env-file=.env.kubernetes
 
+kubectl-deployments:
+	kubectl apply -f kubernetes/app-deployment.yml
+	kubectl apply -f kubernetes/service-deployment.yml
+
+kubectl-connetivity:
+	kubectl create -f kubernetes/service-cluster-ip.yml -n mytube
+	kubectl create -f kubernetes/app-load-balancer.yml -n mytube
+
 .env:
 	@echo "POSTGRES_PASSWORD=\"$(shell head -n 1024 /dev/urandom | $(MD5) | sed 's/ .*//g')\"" > .env
 	@echo 'POSTGRES_USER="postgres"' >> .env
