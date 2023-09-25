@@ -1,4 +1,4 @@
-.phony: clean all format sync clean
+.phony: clean all format sync clean run
 
 all: bin/sync bin/server
 
@@ -8,6 +8,7 @@ bin/sync: bin $(SOURCES)
 	go build -o bin/sync cmd/sync/main.go
 
 bin/server: bin $(SOURCES)
+	echo $$GOPATH $(shell pwd)
 	go build -o bin/server cmd/server/main.go
 
 bin:
@@ -21,3 +22,6 @@ clean:
 
 sync:
 	./bin/sync
+
+run:
+	./bin/server
