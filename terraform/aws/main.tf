@@ -235,6 +235,27 @@ resource "aws_iam_role_policy_attachment" "AmazonEC2ContainerRegistryReadOnly-EK
  role    = aws_iam_role.eks_iam_role.name
 }
 
+resource "aws_security_group" "eks_security_group" {
+  name = "sg_eks"
+  vpc_id =  module.vpc.vpc_id
+
+  ingress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+}
+
 resource "aws_eks_cluster" "mytube" {
  name = var.name
  role_arn = aws_iam_role.eks_iam_role.arn
@@ -243,6 +264,7 @@ resource "aws_eks_cluster" "mytube" {
    subnet_ids = module.vpc.private_subnets
    endpoint_private_access = true
    endpoint_public_access  = true
+   security_group_ids = [aws_security_group.eks_security_group.id]
  }
 
  depends_on = [
@@ -332,7 +354,7 @@ resource "aws_security_group" "db_security_group" {
   }
 }
 
-resource "aws_db_instance" "db-2" {
+resource "aws_db_instance" "db" {
   allocated_storage    = 15
   db_name              = "${var.name}_db"
   engine               = "postgres"
@@ -367,4 +389,8 @@ output "service_image_id" {
 
 output "db_image_id" {
   value = data.docker_image.db.id
+}
+
+output "db_isntance_endpoint" {
+  value = aws_db_instance.db.endpoint
 }
