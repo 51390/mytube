@@ -311,6 +311,27 @@ resource "aws_eks_node_group" "mytube" {
   ]
 }
 
+resource "aws_security_group" "db_security_group" {
+  name = "sg_db"
+  vpc_id =  module.vpc.vpc_id
+
+  ingress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+}
+
 resource "aws_db_instance" "db-2" {
   allocated_storage    = 15
   db_name              = "${var.name}_db"
@@ -321,6 +342,7 @@ resource "aws_db_instance" "db-2" {
   password             = var.POSTGRES_PASSWORD
   skip_final_snapshot  = true
   db_subnet_group_name = module.vpc.database_subnet_group_name
+  vpc_security_group_ids = [aws_security_group.db_security_group.id]
 }
 
 output "app_repository_url" {
