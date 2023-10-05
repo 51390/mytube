@@ -26,8 +26,9 @@ spec:
                 - amd64
       containers:
       - name: service
-        image: 471976620771.dkr.ecr.sa-east-1.amazonaws.com/mytube-service:latest
-        imagePullPolicy: Always
+        #image: 471976620771.dkr.ecr.sa-east-1.amazonaws.com/mytube-service:latest
+        image: mytube-service:latest
+        imagePullPolicy: IfNotPresent
         envFrom:
         - secretRef:
             name: credentials
