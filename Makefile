@@ -24,6 +24,9 @@ kubectl-config-aws:
 kubectl-config-minukube:
 	minikube start
 
+kubectl-stop-minikube:
+	minikube stop
+
 kubectl-namespace:
 	kubectl create namespace mytube
 
@@ -34,9 +37,13 @@ kubectl-deployments:
 	kubectl apply -f kubernetes/app-deployment.yml
 	kubectl apply -f kubernetes/service-deployment.yml
 
+kubectl-db-deployment:
+	kubectl apply -f kubernetes/db-deployment.yml
+
 kubectl-connetivity:
 	kubectl create -f kubernetes/service-cluster-ip.yml -n mytube
 	kubectl create -f kubernetes/app-load-balancer.yml -n mytube
+	kubectl create -f kubernetes/db-cluster-ip.yml -n mytube
 
 .env.kubernetes: .env
 	cat .env | sed 's/="/=/g' | sed 's/"$$//g' > $@
