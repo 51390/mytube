@@ -7,6 +7,9 @@ all: .env
 build: .env
 	docker compose build
 
+build-minikube: .env
+	eval `minikube docker-env`; make build
+
 run: .env
 	docker compose up db -d
 	sleep 3
@@ -15,22 +18,37 @@ run: .env
 down: .env
 	docker compose down
 
-kubectl-config:
+kubectl-config-aws:
 	aws eks update-kubeconfig --region sa-east-1 --name mytube
 
-kubectl-namespace:
-	kubectl create namespace mytube
+kubectl-config-minikube:
+	minikube start
 
-kubectl-secrets:
+kubectl-stop-minikube:
+	minikube stop
+
+kubectl-namespace:
+	-kubectl create namespace mytube
+
+kubectl-secrets: .env.kubernetes
 	kubectl -n mytube create secret generic credentials --from-env-file=.env.kubernetes
 
 kubectl-deployments:
 	kubectl apply -f kubernetes/app-deployment.yml
 	kubectl apply -f kubernetes/service-deployment.yml
 
+kubectl-db-deployment:
+	kubectl apply -f kubernetes/db-deployment.yml
+
 kubectl-connetivity:
 	kubectl create -f kubernetes/service-cluster-ip.yml -n mytube
 	kubectl create -f kubernetes/app-load-balancer.yml -n mytube
+	kubectl create -f kubernetes/db-cluster-ip.yml -n mytube
+
+bootstrap-minikube: kubectl-config-minikube kubectl-namespace kubectl-secrets kubectl-connectivity kibectl-db-deployment kubectl-deployments
+
+.env.kubernetes: .env
+	cat .env | sed 's/="/=/g' | sed 's/"$$//g' > $@
 
 .env:
 	@echo "POSTGRES_PASSWORD=\"$(shell head -n 1024 /dev/urandom | $(MD5) | sed 's/ .*//g')\"" > .env
