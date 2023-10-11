@@ -21,14 +21,14 @@ down: .env
 kubectl-config-aws:
 	aws eks update-kubeconfig --region sa-east-1 --name mytube
 
-kubectl-config-minukube:
+kubectl-config-minikube:
 	minikube start
 
 kubectl-stop-minikube:
 	minikube stop
 
 kubectl-namespace:
-	kubectl create namespace mytube
+	-kubectl create namespace mytube
 
 kubectl-secrets: .env.kubernetes
 	kubectl -n mytube create secret generic credentials --from-env-file=.env.kubernetes
@@ -44,6 +44,8 @@ kubectl-connetivity:
 	kubectl create -f kubernetes/service-cluster-ip.yml -n mytube
 	kubectl create -f kubernetes/app-load-balancer.yml -n mytube
 	kubectl create -f kubernetes/db-cluster-ip.yml -n mytube
+
+bootstrap-minikube: kubectl-config-minikube kubectl-namespace kubectl-secrets kubectl-connectivity kibectl-db-deployment kubectl-deployments
 
 .env.kubernetes: .env
 	cat .env | sed 's/="/=/g' | sed 's/"$$//g' > $@
