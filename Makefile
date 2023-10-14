@@ -13,6 +13,8 @@ build-minikube: .env
 run: .env
 	docker compose up db -d
 	sleep 3
+	docker compose up db-init -d
+	sleep 3
 	docker compose up
 
 down: .env
