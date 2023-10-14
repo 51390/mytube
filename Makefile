@@ -41,7 +41,7 @@ kubectl-deployments:
 
 kubectl-db-deployment:
 	kubectl apply -f kubernetes/db-deployment.yml
-	kubectl apply -f kubernetes/db-init-deployment.yml
+	kubectl apply -f kubernetes/db-init-job.yml
 
 kubectl-connectivity:
 	kubectl create -f kubernetes/service-cluster-ip.yml -n mytube
