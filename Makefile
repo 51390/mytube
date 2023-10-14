@@ -43,12 +43,12 @@ kubectl-db-deployment:
 	kubectl apply -f kubernetes/db-deployment.yml
 	kubectl apply -f kubernetes/db-init-deployment.yml
 
-kubectl-connetivity:
+kubectl-connectivity:
 	kubectl create -f kubernetes/service-cluster-ip.yml -n mytube
 	kubectl create -f kubernetes/app-load-balancer.yml -n mytube
 	kubectl create -f kubernetes/db-cluster-ip.yml -n mytube
 
-bootstrap-minikube: kubectl-config-minikube kubectl-namespace kubectl-secrets kubectl-connectivity kibectl-db-deployment kubectl-deployments
+bootstrap-minikube: kubectl-config-minikube kubectl-namespace kubectl-secrets kubectl-connectivity kubectl-db-deployment kubectl-deployments
 
 .env.kubernetes: .env
 	cat .env | sed 's/="/=/g' | sed 's/"$$//g' > $@
