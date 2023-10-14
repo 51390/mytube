@@ -1,4 +1,4 @@
-.phony: .env run-service run-app init-app build-service run-db db-down
+.phony: run-service run-app init-app build-service run-db db-down
 
 MD5 := $(shell test `uname` = Linux && echo md5sum || echo md5)
 
@@ -12,6 +12,8 @@ build-minikube: .env
 
 run: .env
 	docker compose up db -d
+	sleep 3
+	docker compose up db-init -d
 	sleep 3
 	docker compose up
 
@@ -39,13 +41,14 @@ kubectl-deployments:
 
 kubectl-db-deployment:
 	kubectl apply -f kubernetes/db-deployment.yml
+	kubectl apply -f kubernetes/db-init-deployment.yml
 
-kubectl-connetivity:
+kubectl-connectivity:
 	kubectl create -f kubernetes/service-cluster-ip.yml -n mytube
 	kubectl create -f kubernetes/app-load-balancer.yml -n mytube
 	kubectl create -f kubernetes/db-cluster-ip.yml -n mytube
 
-bootstrap-minikube: kubectl-config-minikube kubectl-namespace kubectl-secrets kubectl-connectivity kibectl-db-deployment kubectl-deployments
+bootstrap-minikube: kubectl-config-minikube kubectl-namespace kubectl-secrets kubectl-connectivity kubectl-db-deployment kubectl-deployments
 
 .env.kubernetes: .env
 	cat .env | sed 's/="/=/g' | sed 's/"$$//g' > $@
