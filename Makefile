@@ -1,4 +1,4 @@
-.phony: .env run-service run-app init-app build-service run-db db-down
+.phony: run-service run-app init-app build-service run-db db-down
 
 MD5 := $(shell test `uname` = Linux && echo md5sum || echo md5)
 
@@ -41,6 +41,7 @@ kubectl-deployments:
 
 kubectl-db-deployment:
 	kubectl apply -f kubernetes/db-deployment.yml
+	kubectl apply -f kubernetes/db-init-deployment.yml
 
 kubectl-connetivity:
 	kubectl create -f kubernetes/service-cluster-ip.yml -n mytube
