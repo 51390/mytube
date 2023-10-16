@@ -34,6 +34,7 @@ variable "POSTGRES_USER" {
 variable "POSTGRES_PASSWORD" {
   description = "password for the admin user"
   type = string
+  sensitive = true
 }
 
 locals {
