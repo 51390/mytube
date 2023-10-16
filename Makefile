@@ -70,6 +70,18 @@ helm-upgrade:
 helm-uninstall:
 	helm uninstall mytube-release --namespace mytube
 
+terraform-plan: .env
+	source ./.env ; terraform -chdir=./infrastructure/terraform/aws plan -var="POSTGRES_PASSWORD=$$POSTGRES_PASSWORD"
+
+terraform-apply: .env
+	source ./.env ; terraform -chdir=./infrastructure/terraform/aws apply -var="POSTGRES_PASSWORD=$$POSTGRES_PASSWORD"
+
+terraform-destroy: .env
+	source ./.env ; terraform -chdir=./infrastructure/terraform/aws destroy -var="POSTGRES_PASSWORD=$$POSTGRES_PASSWORD"
+
+terraform-output:
+	terraform -chdir=./infrastructure/terraform/aws output
+
 .env.kubernetes: .env
 	cat .env | sed 's/="/=/g' | sed 's/"$$//g' > $@
 
