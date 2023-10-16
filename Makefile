@@ -54,6 +54,12 @@ teardown-minikube:
 	kubectl delete namespace mytube
 	make stop-minikube
 
+helm-install: kubectl-namespace kubectl-secrets
+	helm install mytube-release ./infrastructure/helm/mytube --namespace mytube
+
+helm-uninstall:
+	helm uninstall mytube-release
+
 .env.kubernetes: .env
 	cat .env | sed 's/="/=/g' | sed 's/"$$//g' > $@
 

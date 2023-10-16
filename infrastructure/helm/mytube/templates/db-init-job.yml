@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mytube-db-init
+  namespace: mytube
+  labels:
+    job: mytube-db-init
+spec:
+  template:
+    spec:
+      containers:
+      - name: mytube-db-init
+        image: mytube-db-init:latest
+        imagePullPolicy: IfNotPresent
+        envFrom:
+        - secretRef:
+            name: credentials
+        command: ["/usr/bin/entrypoint.sh"]
+      restartPolicy: Never
+  backoffLimit: 4
