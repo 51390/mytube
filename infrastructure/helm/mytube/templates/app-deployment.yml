@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mytube-app-deployment
+  namespace: mytube
+  labels:
+    app: mytube-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mytube-app
+  template:
+    metadata:
+      labels:
+        app: mytube-app
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/arch
+                operator: In
+                values:
+                - amd64
+      containers:
+      - name: app
+        #image: 471976620771.dkr.ecr.sa-east-1.amazonaws.com/mytube-app:latest
+        image: mytube-app:latest
+        imagePullPolicy: IfNotPresent
+        envFrom:
+        - secretRef:
+            name: credentials
+        ports:
+        - name: http
+          containerPort: 5000
+          #command: ["bash", "-c", "apt update -y; apt install -y dnsutils; nslookup terraform-20230924193449983400000008.ceg6sshdmt0u.sa-east-1.rds.amazonaws.com"]
+          #command: ["bash", "-c", "apt update -y; apt install -y postgresql-client; PGPASSWORD=f745a1130c7d37af08e7abb2e02f2cf6 psql 'host=terraform-20230924230138605500000008.ceg6sshdmt0u.sa-east-1.rds.amazonaws.com dbname=mytube_service sslmode=allow' -U postgres -c '\\l'"]
+      nodeSelector:
+        kubernetes.io/os: linux

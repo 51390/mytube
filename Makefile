@@ -26,7 +26,7 @@ kubectl-config-aws:
 kubectl-config-minikube:
 	minikube start
 
-kubectl-stop-minikube:
+stop-minikube:
 	minikube stop
 
 kubectl-namespace:
@@ -49,6 +49,16 @@ kubectl-connectivity:
 	kubectl create -f kubernetes/db-cluster-ip.yml -n mytube
 
 bootstrap-minikube: kubectl-config-minikube kubectl-namespace kubectl-secrets kubectl-connectivity kubectl-db-deployment kubectl-deployments
+
+teardown-minikube:
+	kubectl delete namespace mytube
+	make stop-minikube
+
+helm-install: kubectl-namespace kubectl-secrets
+	helm install mytube-release ./infrastructure/helm/mytube --namespace mytube
+
+helm-uninstall:
+	helm uninstall mytube-release
 
 .env.kubernetes: .env
 	cat .env | sed 's/="/=/g' | sed 's/"$$//g' > $@
