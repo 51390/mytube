@@ -15,15 +15,6 @@ spec:
       labels:
         app: mytube-app
     spec:
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: kubernetes.io/arch
-                operator: In
-                values:
-                - amd64
       containers:
       - name: app
         #image: 471976620771.dkr.ecr.sa-east-1.amazonaws.com/mytube-app:latest
