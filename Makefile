@@ -35,6 +35,9 @@ kubectl-namespace:
 kubectl-secrets: .env.kubernetes
 	kubectl -n mytube create secret generic credentials --from-env-file=.env.kubernetes
 
+kubectl-secrets-minikube: .env.minikube
+	kubectl -n mytube create secret generic credentials --from-env-file=.env.minikube
+
 kubectl-deployments:
 	kubectl apply -f kubernetes/app-deployment.yml
 	kubectl apply -f kubernetes/service-deployment.yml
@@ -50,15 +53,22 @@ kubectl-connectivity:
 
 bootstrap-minikube: kubectl-config-minikube kubectl-namespace kubectl-secrets kubectl-connectivity kubectl-db-deployment kubectl-deployments
 
+load-balancer:
+	minikube service mytube-app-load-balancer -n mytube
+
 teardown-minikube:
 	kubectl delete namespace mytube
 	make stop-minikube
 
-helm-install: kubectl-namespace kubectl-secrets
+helm-install:
+	-make kubectl-namespace kubectl-secrets
 	helm install mytube-release ./infrastructure/helm/mytube --namespace mytube
 
+helm-upgrade:
+	helm upgrade mytube-release ./infrastructure/helm/mytube --namespace mytube
+
 helm-uninstall:
-	helm uninstall mytube-release
+	helm uninstall mytube-release --namespace mytube
 
 .env.kubernetes: .env
 	cat .env | sed 's/="/=/g' | sed 's/"$$//g' > $@
