@@ -7,4 +7,4 @@ init-app:
 	pip install -r requirements.txt
 
 init-db:
-	cat app/scripts/init_db.py | flask --app . shell
+	echo 'db.create_all()' | flask --app . shell

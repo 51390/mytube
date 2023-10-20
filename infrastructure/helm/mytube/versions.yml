@@ -1,0 +1,4 @@
+app_version: "0.0.1.6"
+service_version: "0.0.1"
+db_version: "0.0.1"
+db_init_version: "0.0.1"
