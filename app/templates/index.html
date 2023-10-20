@@ -12,41 +12,41 @@ a {
 </style>
 
 
-    <div class="container">
-        <div class="row">
-            <div class="col">
-                {{ render_form(filter_form) }}
-            </div>
-        </div>
-        <div class="row mt-2">
-            <div class="col">
-                {{ render_form(sync_form, action=sync_form.action) }}
-            </div>
+<div class="container">
+    <div class="row">
+        <div class="col">
+            {{ render_form(filter_form) }}
         </div>
     </div>
-    <div class="container mt-2">
-        {% for video in videos %}
-            <a target="external" href=https://youtube.com/watch?v={{video.id}}>
-            <div class="row my-3" style="background-color:#fee; border-radius: 25px">
-                <div class="col" style="border-radius: 25px  0 0 25px;padding:0; max-width:320px;min-height:180px; background-color:#555; justify-content: center; align-items: center; text-align: center">
-                    {% if video.thumbnail %}
-                        <img  style="border-radius: 25px  0 0 25px" src="{{video.thumbnail}}" />
-                    {% else %}
-                    <div style="margin-top:20%;border-radius: 25px  0 0 25px"><h1>🖼</h1></div>
-                    {% endif %}
+    <div class="row mt-2">
+        <div class="col">
+            {{ render_form(sync_form, action=sync_form.action) }}
+        </div>
+    </div>
+</div>
+<div class="container mt-2">
+    {% for video in videos %}
+        <a target="external" href=https://youtube.com/watch?v={{video.id}}>
+        <div class="row my-3" style="background-color:#fee; border-radius: 25px">
+            <div class="col" style="border-radius: 25px  0 0 25px;padding:0; max-width:320px;min-height:180px; background-color:#555; justify-content: center; align-items: center; text-align: center">
+                {% if video.thumbnail %}
+                    <img  style="border-radius: 25px  0 0 25px" src="{{video.thumbnail}}" />
+                {% else %}
+                <div style="margin-top:20%;border-radius: 25px  0 0 25px"><h1>🖼</h1></div>
+                {% endif %}
+            </div>
+            <div class="col" style="padding:15px; position: relative">
+                <div>
+                <h5>{{ video.title }}</h5>
                 </div>
-                <div class="col" style="padding:15px; position: relative">
-                    <div>
-                    <h5>{{ video.title }}</h5>
-                    </div>
-                    <div style="position: absolute; bottom: 15px">
-                        <b>{{ video.channelTitle }}</b><br/>
-                        <i>Duration: {{ video.duration }}</i><br/>
-                        <i>Published: {{ video.publishedAt }}</i>
-                    </div>
+                <div style="position: absolute; bottom: 15px">
+                    <b>{{ video.channelTitle }}</b><br/>
+                    <i>Duration: {{ video.duration }}</i><br/>
+                    <i>Published: {{ video.publishedAt }} ({{ video.publishedAt | humanize_ellapsed_time}} ago)</i>
                 </div>
             </div>
-            </a>
-         {% endfor %}
-    </div>
+        </div>
+        </a>
+     {% endfor %}
+</div>
 {% endblock %}

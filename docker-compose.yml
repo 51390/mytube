@@ -3,7 +3,7 @@ version: '3.8'
 services:
   app:
     platform: linux/amd64
-    image: ${COMPOSE_PROJECT_NAME}-app
+    image: ${COMPOSE_PROJECT_NAME}-app:${APP_VERSION}
     build: ./app
     env_file:
       - .env
@@ -18,7 +18,7 @@ services:
 
   service:
     platform: linux/amd64
-    image: ${COMPOSE_PROJECT_NAME}-service
+    image: ${COMPOSE_PROJECT_NAME}-service:${SERVICE_VERSION}
     build: ./service
     env_file:
       - .env
@@ -32,7 +32,7 @@ services:
 
   db:
     platform: linux/amd64
-    image: ${COMPOSE_PROJECT_NAME}-db
+    image: ${COMPOSE_PROJECT_NAME}-db:${DB_VERSION}
     build: ./db
     env_file:
       - .env
@@ -43,7 +43,7 @@ services:
 
   db-init:
     platform: linux/amd64
-    image: ${COMPOSE_PROJECT_NAME}-db-init
+    image: ${COMPOSE_PROJECT_NAME}-db-init:${DB_INIT_VERSION}
     build: ./db-init
     env_file:
       - .env

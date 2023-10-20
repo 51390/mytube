@@ -18,7 +18,7 @@ spec:
       containers:
       - name: app
         #image: 471976620771.dkr.ecr.sa-east-1.amazonaws.com/mytube-app:latest
-        image: mytube-app:latest
+        image: mytube-app:{{ .Values.app_version }}
         imagePullPolicy: IfNotPresent
         envFrom:
         - secretRef:

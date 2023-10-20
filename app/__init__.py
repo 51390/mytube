@@ -67,6 +67,7 @@ def create_app():
 
 app, db, bootstrap, csrf, login_manager = create_app()
 
+
 @login_manager.user_loader
 def load_user(user_id):
     user = User(user_id)

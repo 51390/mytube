@@ -1,6 +1,8 @@
 import aiohttp
 import datetime
+import dateutil.parser
 import flask
+import humanize
 import json
 import jwt
 import os
@@ -9,6 +11,7 @@ from flask import Blueprint, render_template, redirect, request, current_app as 
 from flask_login import login_required
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField
+
 
 videos_blueprint = Blueprint('videos', __name__)
 
@@ -28,6 +31,12 @@ class FilterForm(FlaskForm):
 class SyncForm(FlaskForm):
     action = '/sync'
     submit_field = SubmitField('Sync')
+
+
+@videos_blueprint.app_template_filter('humanize_ellapsed_time')
+def humanize_ellapsed_time(time_string):
+    delta = datetime.datetime.now(datetime.timezone.utc) - dateutil.parser.isoparse(time_string)
+    return humanize.naturaldelta(delta)
 
 
 async def fetch_videos(user_id, min_duration = None, max_duration = None, published_since = None):
