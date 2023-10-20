@@ -5,10 +5,21 @@ MD5 := $(shell test `uname` = Linux && echo md5sum || echo md5)
 all: .env
 
 build: .env
-	docker compose build
+	docker compose --env-file .versions build 
 
-build-minikube: .env
+minikube-build: .env
 	eval `minikube docker-env`; make build
+
+minikube-images:
+	eval `minikube docker-env`; docker images
+
+minikube-tunnel:
+	minikube tunnel
+
+infrastructure/helm/mytube/versions.yml: .versions
+	cat .versions | sed 's/=/: /g' | awk '{ print tolower($0) }' > $@
+
+versions: infrastructure/helm/mytube/versions.yml
 
 run: .env
 	docker compose up db -d
@@ -36,6 +47,7 @@ kubectl-secrets: .env.kubernetes
 	kubectl -n mytube create secret generic credentials --from-env-file=.env.kubernetes
 
 kubectl-secrets-minikube: .env.minikube
+	-kubectl -n mytube delete secret credentials
 	kubectl -n mytube create secret generic credentials --from-env-file=.env.minikube
 
 kubectl-deployments:
@@ -60,12 +72,12 @@ teardown-minikube:
 	kubectl delete namespace mytube
 	make stop-minikube
 
-helm-install:
+helm-install: minikube-build versions
 	-make kubectl-namespace kubectl-secrets
-	helm install mytube-release ./infrastructure/helm/mytube --namespace mytube
+	helm install mytube-release ./infrastructure/helm/mytube --namespace mytube -f infrastructure/helm/mytube/versions.yml
 
-helm-upgrade:
-	helm upgrade mytube-release ./infrastructure/helm/mytube --namespace mytube
+helm-upgrade: minikube-build versions
+	helm upgrade mytube-release ./infrastructure/helm/mytube --namespace mytube -f infrastructure/helm/mytube/versions.yml
 
 helm-uninstall:
 	helm uninstall mytube-release --namespace mytube
