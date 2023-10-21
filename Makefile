@@ -11,6 +11,13 @@ MD5 := $(shell test `uname` = Linux && echo md5sum || echo md5)
 .env.kubernetes: .env
 	cat .env | sed 's/="/=/g' | sed 's/"$$//g' > $@
 
+docker-images:
+	eval `minikube docker-env`; docker pull postgres
+	eval `minikube docker-env`; docker pull ubuntu
+
+docker-login:
+	eval `minikube docker-env`; docker login
+
 compose-build: .env
 	docker compose --env-file .versions build 
 
@@ -92,6 +99,9 @@ minikube-load-balancer:
 minikube-teardown:
 	-kubectl delete namespace mytube
 	make minikube-stop
+
+terraform-init:
+	terraform -chdir=./infrastructure/terraform/aws init
 
 terraform-plan: .env
 	source ./.env ; terraform -chdir=./infrastructure/terraform/aws plan -var="POSTGRES_PASSWORD=$$POSTGRES_PASSWORD"

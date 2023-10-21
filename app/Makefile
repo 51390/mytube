@@ -7,4 +7,5 @@ init-app:
 	pip install -r requirements.txt
 
 init-db:
+	PGPASSWORD=$$POSTGRES_PASSWORD psql -h $$POSTGRES_HOST -U $$POSTGRES_USER -c 'create database mytube_app;'
 	echo 'db.create_all()' | flask --app . shell

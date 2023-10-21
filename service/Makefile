@@ -23,5 +23,8 @@ clean:
 sync:
 	./bin/sync
 
+init-db:
+	PGPASSWORD=$$POSTGRES_PASSWORD psql -h $$POSTGRES_HOST -U $$POSTGRES_USER -c 'create database mytube_service;'
+
 run:
 	./bin/server

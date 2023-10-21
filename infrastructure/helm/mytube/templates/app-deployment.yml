@@ -15,6 +15,16 @@ spec:
       labels:
         app: {{ .Values.app_name }}
     spec:
+      initContainers:
+      - name: app-init
+        image: {{ .Values.app_name }}:{{ .Values.app_version }}
+        command: ['make', 'init-db']
+        imagePullPolicy: IfNotPresent
+        envFrom:
+        - secretRef:
+            name: credentials
+      nodeSelector:
+        kubernetes.io/os: linux
       containers:
       - name: app
         image: {{ .Values.app_name }}:{{ .Values.app_version }}
