@@ -1,6 +1,7 @@
 MD5 := $(shell test `uname` = Linux && echo md5sum || echo md5)
 ENVVARS := source .env; source .versions
 TERRAFORM_VARS := -var="POSTGRES_PASSWORD=$$POSTGRES_PASSWORD" -var="APP_VERSION=$$APP_VERSION" -var="SERVICE_VERSION=$$SERVICE_VERSION" -var="DB_VERSION=$$DB_VERSION"
+HELM_DEBUG := $(shell test "$(DEBUG)" = "true" && echo '--dry-run --debug' || echo '')
 
 .env:
 	@echo "POSTGRES_PASSWORD=\"$(shell head -n 1024 /dev/urandom | $(MD5) | sed 's/ .*//g')\"" > .env
@@ -36,23 +37,23 @@ helm-terraform-values:
 	make terraform-output | sed 's/ = /: /g' > infrastructure/helm/mytube/terraform-values.yml
 
 helm-install: minikube-build helm-versions
-	helm install mytube-release ./infrastructure/helm/mytube --namespace mytube \
+	helm install mytube-release ./infrastructure/helm/mytube --namespace mytube $(HELM_DEBUG) \
 		-f infrastructure/helm/mytube/versions.yml \
 		-f infrastructure/helm/mytube/values.yml
 
 helm-install-aws: kubectl-config-aws kubectl-namespace kubectl-secrets helm-versions helm-terraform-values
-	helm install mytube-release ./infrastructure/helm/mytube --namespace mytube \
+	helm install mytube-release ./infrastructure/helm/mytube --namespace mytube $(HELM_DEBUG) \
 		-f infrastructure/helm/mytube/versions.yml \
 		-f infrastructure/helm/mytube/values.yml \
 		-f infrastructure/helm/mytube/terraform-values.yml
 
 helm-upgrade: minikube-build helm-versions
-	helm upgrade mytube-release ./infrastructure/helm/mytube --namespace mytube \
+	helm upgrade mytube-release ./infrastructure/helm/mytube --namespace mytube $(HELM_DEBUG) \
 		-f infrastructure/helm/mytube/versions.yml \
 		-f infrastructure/helm/mytube/values.yml
 
 helm-upgrade-aws: kubectl-config-aws helm-versions helm-terraform-values
-	helm upgrade mytube-release ./infrastructure/helm/mytube --namespace mytube \
+	helm upgrade mytube-release ./infrastructure/helm/mytube --namespace mytube $(HELM_DEBUG) \
 		-f infrastructure/helm/mytube/versions.yml \
 		-f infrastructure/helm/mytube/values.yml \
 		-f infrastructure/helm/mytube/terraform-values.yml

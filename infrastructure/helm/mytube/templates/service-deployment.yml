@@ -23,6 +23,7 @@ spec:
         envFrom:
         - secretRef:
             name: credentials
+        {{- include "mytube.envvars" . | indent 8}}
       containers:
       - name: service
         image: {{ .Values.service_repository_url }}:{{ .Values.service_version }}
@@ -30,6 +31,7 @@ spec:
         envFrom:
         - secretRef:
             name: credentials
+        {{- include "mytube.envvars" . | indent 8}}
         ports:
         - name: http
           containerPort: 3000
