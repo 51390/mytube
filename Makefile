@@ -1,4 +1,6 @@
 MD5 := $(shell test `uname` = Linux && echo md5sum || echo md5)
+ENVVARS := source .env; source .versions
+TERRAFORM_VARS := -var="POSTGRES_PASSWORD=$$POSTGRES_PASSWORD" -var="APP_VERSION=$$APP_VERSION" -var="SERVICE_VERSION=$$SERVICE_VERSION" -var="DB_VERSION=$$DB_VERSION"
 
 .env:
 	@echo "POSTGRES_PASSWORD=\"$(shell head -n 1024 /dev/urandom | $(MD5) | sed 's/ .*//g')\"" > .env
@@ -9,6 +11,9 @@ MD5 := $(shell test `uname` = Linux && echo md5sum || echo md5)
 	@cat  client_secret.json | jq -c '.["installed"]' | tr ',' '\n' | sed 's/[{}]//g' | sed 's/^"//g' | sed 's/":/ /g' | awk '{ print toupper($$1) "=" $$2}' >> .env
 
 .env.kubernetes: .env
+	cat .env | sed 's/="/=/g' | sed 's/"$$//g' > $@
+
+.env.aws: .env
 	cat .env | sed 's/="/=/g' | sed 's/"$$//g' > $@
 
 docker-images:
@@ -104,13 +109,16 @@ terraform-init:
 	terraform -chdir=./infrastructure/terraform/aws init
 
 terraform-plan: .env
-	source ./.env ; terraform -chdir=./infrastructure/terraform/aws plan -var="POSTGRES_PASSWORD=$$POSTGRES_PASSWORD"
+	$(ENVVARS) ; terraform -chdir=./infrastructure/terraform/aws plan $(TERRAFORM_VARS)
 
-terraform-apply: .env
-	source ./.env ; terraform -chdir=./infrastructure/terraform/aws apply -var="POSTGRES_PASSWORD=$$POSTGRES_PASSWORD"
+terraform-apply: .env compose-build
+	$(ENVVARS) ; terraform -chdir=./infrastructure/terraform/aws apply $(TERRAFORM_VARS)
 
 terraform-destroy: .env
-	source ./.env ; terraform -chdir=./infrastructure/terraform/aws destroy -var="POSTGRES_PASSWORD=$$POSTGRES_PASSWORD"
+	$(ENVVARS) ; terraform -chdir=./infrastructure/terraform/aws destroy $(TERRAFORM_VARS)
 
 terraform-output:
-	terraform -chdir=./infrastructure/terraform/aws output
+	@terraform -chdir=./infrastructure/terraform/aws output
+
+helm-terraform-values:
+	make terraform-output | sed 's/ = /: /g' > infrastructure/helm/mytube/terraform-values.yml
