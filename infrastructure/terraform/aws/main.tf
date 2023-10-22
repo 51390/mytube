@@ -34,6 +34,25 @@ variable "POSTGRES_USER" {
 variable "POSTGRES_PASSWORD" {
   description = "password for the admin user"
   type = string
+  sensitive = true
+}
+
+variable "APP_VERSION" {
+  description = "the application image current version"
+  type = string
+  default = "0.0.1.0"
+}
+
+variable "SERVICE_VERSION" {
+  description = "the service image current version"
+  type = string
+  default = "0.0.1.0"
+}
+
+variable "DB_VERSION" {
+  description = "the db image current version"
+  type = string
+  default = "0.0.1.0"
 }
 
 locals {
@@ -112,8 +131,8 @@ resource "null_resource" "app_image" {
 }
 
 resource "docker_tag" "app" {
-  source_image = "${var.name}-app"
-  target_image = "${aws_ecr_repository.app.repository_url}"
+  source_image = "${var.name}-app:${var.APP_VERSION}"
+  target_image = "${aws_ecr_repository.app.repository_url}:${var.APP_VERSION}"
 
   lifecycle {
     replace_triggered_by = [
@@ -142,8 +161,8 @@ resource "null_resource" "service_image" {
 }
 
 resource "docker_tag" "service" {
-  source_image = "${var.name}-service"
-  target_image = "${aws_ecr_repository.service.repository_url}"
+  source_image = "${var.name}-service:${var.SERVICE_VERSION}"
+  target_image = "${aws_ecr_repository.service.repository_url}:${var.SERVICE_VERSION}"
 
   lifecycle {
     replace_triggered_by = [
@@ -171,10 +190,9 @@ resource "null_resource" "db_image" {
   }
 }
 
-
 resource "docker_tag" "db" {
-  source_image = "${var.name}-db"
-  target_image = "${aws_ecr_repository.db.repository_url}"
+  source_image = "${var.name}-db:${var.DB_VERSION}"
+  target_image = "${aws_ecr_repository.db.repository_url}:${var.DB_VERSION}"
 
   lifecycle {
     replace_triggered_by = [
@@ -193,13 +211,13 @@ resource "null_resource" "push_images" {
   provisioner "local-exec" {
     command = <<EOT
       ${local.docker_login_cmd} | docker login --username AWS --password-stdin ${aws_ecr_repository.app.repository_url}
-      docker push ${aws_ecr_repository.app.repository_url}
+      docker push ${aws_ecr_repository.app.repository_url}:${var.APP_VERSION}
 
       ${local.docker_login_cmd} | docker login --username AWS --password-stdin ${aws_ecr_repository.service.repository_url}
-      docker push ${aws_ecr_repository.service.repository_url}
+      docker push ${aws_ecr_repository.service.repository_url}:${var.SERVICE_VERSION}
 
       ${local.docker_login_cmd} | docker login --username AWS --password-stdin ${aws_ecr_repository.db.repository_url}
-      docker push ${aws_ecr_repository.db.repository_url}
+      docker push ${aws_ecr_repository.db.repository_url}:${var.DB_VERSION}
     EOT
   }
 }

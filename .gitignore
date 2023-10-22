@@ -69,3 +69,7 @@ terraform.rc
 # misc
 .env*
 *.log
+
+# generated files
+infrastructure/helm/mytube/versions.yml
+infrastructure/helm/mytube/terraform-values.yml

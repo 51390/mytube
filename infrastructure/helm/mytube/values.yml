@@ -1,0 +1,4 @@
+namespace: mytube
+service_name: mytube-service
+app_name: mytube-app
+db_name: mytube-db
