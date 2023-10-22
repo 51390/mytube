@@ -72,3 +72,4 @@ terraform.rc
 
 # generated files
 infrastructure/helm/mytube/versions.yml
+infrastructure/helm/mytube/terraform-values.yml
