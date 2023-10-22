@@ -16,25 +16,22 @@ TERRAFORM_VARS := -var="POSTGRES_PASSWORD=$$POSTGRES_PASSWORD" -var="APP_VERSION
 .env.aws: .env
 	cat .env | sed 's/="/=/g' | sed 's/"$$//g' > $@
 
-docker-images:
-	eval `minikube docker-env`; docker pull postgres
-	eval `minikube docker-env`; docker pull ubuntu
-
-docker-login:
-	eval `minikube docker-env`; docker login
-
 compose-build: .env
 	docker compose --env-file .versions build 
 
 compose-run: .env
-	docker compose up db -d
-	sleep 3
-	docker compose up db-init -d
-	sleep 3
-	docker compose up
+	docker compose --env-file .versions up db -d
+	while true; do make compose-init && break || sleep 1; done
+	docker compose --env-file .versions up
+
+compose-init:
+	docker compose --env-file .versions run --entrypoint="make init-db" app 
+	echo app ok
+	docker compose --env-file .versions run --entrypoint="make init-db" service
+	echo service ok
 
 compose-down: .env
-	docker compose down
+	docker compose --env-file .versions down
 
 helm-versions: infrastructure/helm/mytube/versions.yml
 
@@ -137,4 +134,3 @@ terraform-destroy: .env
 
 terraform-output:
 	@terraform -chdir=./infrastructure/terraform/aws output
-
