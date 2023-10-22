@@ -12,7 +12,8 @@ HELM_DEBUG := $(shell test "$(DEBUG)" = "true" && echo '--dry-run --debug' || ec
 	@cat  client_secret.json | jq -c '.["installed"]' | tr ',' '\n' | sed 's/[{}]//g' | sed 's/^"//g' | sed 's/":/ /g' | awk '{ print toupper($$1) "=" $$2}' >> .env
 
 .env.aws: .env
-	cat .env | sed 's/="/=/g' | sed 's/"$$//g' > $@
+	cat .env | sed 's/="/=/g' | sed 's/"$$//g' | grep -v POSTGRES_SSLMODE > $@
+	echo 'POSTGRES_SSLMODE=require' >> $@
 
 compose-build: .env
 	docker compose --env-file .versions build 

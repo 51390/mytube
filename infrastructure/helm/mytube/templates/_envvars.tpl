@@ -3,8 +3,6 @@
 env:
 - name: POSTGRES_HOST
   value: {{ regexReplaceAll ":.*" .Values.db_isntance_endpoint "" }}
-- name: POSTGRES_SSLMODE
-  value: require
 - name: API_BASE
   value: http://mytube-service-cluster-ip:3000
 {{- end}}
