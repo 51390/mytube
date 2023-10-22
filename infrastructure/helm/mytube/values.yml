@@ -2,4 +2,7 @@ namespace: mytube
 service_name: mytube-service
 app_name: mytube-app
 db_name: mytube-db
+service_repository_url: mytube-service
+app_repository_url: mytube-app
+db_repository_url: mytube-db
 db_isntance_endpoint: mytube-db-cluster-ip
