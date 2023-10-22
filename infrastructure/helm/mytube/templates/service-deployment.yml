@@ -18,14 +18,14 @@ spec:
       initContainers:
       - name: service-init
         command: ['make', 'init-db']
-        image: {{ .Values.service_name }}:{{ .Values.service_version }}
+        image: {{ .Values.service_repository_url }}:{{ .Values.service_version }}
         imagePullPolicy: IfNotPresent
         envFrom:
         - secretRef:
             name: credentials
       containers:
       - name: service
-        image: {{ .Values.service_name }}:{{ .Values.service_version }}
+        image: {{ .Values.service_repository_url }}:{{ .Values.service_version }}
         imagePullPolicy: IfNotPresent
         envFrom:
         - secretRef:

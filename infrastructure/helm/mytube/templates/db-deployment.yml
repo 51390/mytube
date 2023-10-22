@@ -17,8 +17,7 @@ spec:
     spec:
       containers:
       - name: db
-        #image: 471976620771.dkr.ecr.sa-east-1.amazonaws.com/mytube-db:latest
-        image: {{ .Values.db_name }}:{{ .Values.db_version }}
+        image: {{ .Values.db_repository_url }}:{{ .Values.db_version }}
         imagePullPolicy: IfNotPresent
         envFrom:
         - secretRef:

@@ -17,7 +17,7 @@ spec:
     spec:
       initContainers:
       - name: app-init
-        image: {{ .Values.app_name }}:{{ .Values.app_version }}
+        image: {{ .Values.app_repository_url }}:{{ .Values.app_version }}
         command: ['make', 'init-db']
         imagePullPolicy: IfNotPresent
         envFrom:
@@ -27,7 +27,7 @@ spec:
         kubernetes.io/os: linux
       containers:
       - name: app
-        image: {{ .Values.app_name }}:{{ .Values.app_version }}
+        image: {{ .Values.app_repository_url }}:{{ .Values.app_version }}
         imagePullPolicy: IfNotPresent
         envFrom:
         - secretRef:
