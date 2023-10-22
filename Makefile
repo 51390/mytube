@@ -38,17 +38,35 @@ compose-down: .env
 
 helm-versions: infrastructure/helm/mytube/versions.yml
 
+helm-terraform-values:
+	make terraform-output | sed 's/ = /: /g' > infrastructure/helm/mytube/terraform-values.yml
+
 helm-install: minikube-build helm-versions
 	helm install mytube-release ./infrastructure/helm/mytube --namespace mytube \
 		-f infrastructure/helm/mytube/versions.yml \
 		-f infrastructure/helm/mytube/values.yml
+
+helm-install-aws: kubectl-config-aws kubectl-namespace kubectl-secrets helm-versions helm-terraform-values
+	helm install mytube-release ./infrastructure/helm/mytube --namespace mytube \
+		-f infrastructure/helm/mytube/versions.yml \
+		-f infrastructure/helm/mytube/values.yml \
+		-f infrastructure/helm/mytube/terraform-values.yml
 
 helm-upgrade: minikube-build helm-versions
 	helm upgrade mytube-release ./infrastructure/helm/mytube --namespace mytube \
 		-f infrastructure/helm/mytube/versions.yml \
 		-f infrastructure/helm/mytube/values.yml
 
+helm-upgrade-aws: kubectl-config-aws helm-versions helm-terraform-values
+	helm upgrade mytube-release ./infrastructure/helm/mytube --namespace mytube \
+		-f infrastructure/helm/mytube/versions.yml \
+		-f infrastructure/helm/mytube/values.yml \
+		-f infrastructure/helm/mytube/terraform-values.yml
+
 helm-uninstall:
+	helm uninstall mytube-release --namespace mytube
+
+helm-uninstall-aws: kubectl-config-aws
 	helm uninstall mytube-release --namespace mytube
 
 infrastructure/helm/mytube/versions.yml: .versions
@@ -120,5 +138,3 @@ terraform-destroy: .env
 terraform-output:
 	@terraform -chdir=./infrastructure/terraform/aws output
 
-helm-terraform-values:
-	make terraform-output | sed 's/ = /: /g' > infrastructure/helm/mytube/terraform-values.yml
