@@ -10,9 +10,6 @@ TERRAFORM_VARS := -var="POSTGRES_PASSWORD=$$POSTGRES_PASSWORD" -var="APP_VERSION
 	@echo "JWT_TOKEN_SECRET=\"$(shell head -n 1024 /dev/urandom | $(MD5) | sed 's/ .*//g')\"" >> .env
 	@cat  client_secret.json | jq -c '.["installed"]' | tr ',' '\n' | sed 's/[{}]//g' | sed 's/^"//g' | sed 's/":/ /g' | awk '{ print toupper($$1) "=" $$2}' >> .env
 
-.env.kubernetes: .env
-	cat .env | sed 's/="/=/g' | sed 's/"$$//g' > $@
-
 .env.aws: .env
 	cat .env | sed 's/="/=/g' | sed 's/"$$//g' > $@
 
@@ -78,9 +75,9 @@ kubectl-config-minikube:
 kubectl-namespace:
 	-kubectl create namespace mytube
 
-kubectl-secrets: .env.kubernetes
+kubectl-secrets: .env.aws
 	-kubectl -n mytube delete secret credentials
-	kubectl -n mytube create secret generic credentials --from-env-file=.env.kubernetes
+	kubectl -n mytube create secret generic credentials --from-env-file=.env.aws
 
 kubectl-secrets-minikube: .env.minikube
 	-kubectl -n mytube delete secret credentials
