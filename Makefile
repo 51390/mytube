@@ -9,7 +9,11 @@ HELM_DEBUG := $(shell test "$(DEBUG)" = "true" && echo '--dry-run --debug' || ec
 	@echo 'POSTGRES_HOST="db"' >> .env
 	@echo 'POSTGRES_SSLMODE="allow"' >> .env
 	@echo "JWT_TOKEN_SECRET=\"$(shell head -n 1024 /dev/urandom | $(MD5) | sed 's/ .*//g')\"" >> .env
+	@echo 'API_BASE="http://service:3000"' >> .env
 	@cat  client_secret.json | jq -c '.["web"]["redirect_uris"]=[.["web"]["redirect_uris"][0]]' | jq -c '.["web"]' | jq  -c 'del(.javascript_origins)' | tr ',' '\n' | sed 's/[{}]//g' | sed 's/^"//g' | sed 's/":/ /g' | awk '{ print toupper($$1) "=" $$2}' >> .env
+
+.env.minikube: .env
+	cat .env | sed 's/="/=/g' | sed 's/"$$//g' > $@
 
 .env.aws: .env
 	cat .env | sed 's/="/=/g' | sed 's/"$$//g' | grep -v POSTGRES_SSLMODE > $@
