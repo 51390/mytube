@@ -91,19 +91,6 @@ kubectl-secrets-minikube: .env.minikube
 	-kubectl -n mytube delete secret credentials
 	kubectl -n mytube create secret generic credentials --from-env-file=.env.minikube
 
-kubectl-deployments:
-	kubectl apply -f kubernetes/app-deployment.yml
-	kubectl apply -f kubernetes/service-deployment.yml
-
-kubectl-db-deployment:
-	kubectl apply -f kubernetes/db-deployment.yml
-	kubectl apply -f kubernetes/db-init-job.yml
-
-kubectl-connectivity:
-	kubectl create -f kubernetes/service-cluster-ip.yml -n mytube
-	kubectl create -f kubernetes/app-load-balancer.yml -n mytube
-	kubectl create -f kubernetes/db-cluster-ip.yml -n mytube
-
 minikube-build: .env
 	eval `minikube docker-env`; make compose-build
 
