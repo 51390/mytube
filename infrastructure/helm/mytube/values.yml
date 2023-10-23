@@ -6,3 +6,8 @@ service_repository_url: mytube-service
 app_repository_url: mytube-app
 db_repository_url: mytube-db
 db_isntance_endpoint: mytube-db-cluster-ip
+redirect_uris: "\"[\\\"http://localhost\\\"]\""
+google_redirect_uri: http://localhost
+app_endpoint: http://localhost
+app_port: "80"
+postgres_sslmode: allow
