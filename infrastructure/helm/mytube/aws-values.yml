@@ -1,0 +1,4 @@
+google_redirect_uri: http://mytube.51390.cloud
+app_endpoint: http://mytube.51390.cloud
+redirect_uris: "\"[\\\"mytube.51390.cloud\\\"]\""
+postgres_sslmode: require

@@ -1,6 +1,7 @@
 MD5 := $(shell test `uname` = Linux && echo md5sum || echo md5)
 ENVVARS := source .env; source .versions
 TERRAFORM_VARS := -var="POSTGRES_PASSWORD=$$POSTGRES_PASSWORD" -var="APP_VERSION=$$APP_VERSION" -var="SERVICE_VERSION=$$SERVICE_VERSION" -var="DB_VERSION=$$DB_VERSION"
+HELM_DEBUG := $(shell test "$(DEBUG)" = "true" && echo '--dry-run --debug' || echo '')
 
 .env:
 	@echo "POSTGRES_PASSWORD=\"$(shell head -n 1024 /dev/urandom | $(MD5) | sed 's/ .*//g')\"" > .env
@@ -8,13 +9,15 @@ TERRAFORM_VARS := -var="POSTGRES_PASSWORD=$$POSTGRES_PASSWORD" -var="APP_VERSION
 	@echo 'POSTGRES_HOST="db"' >> .env
 	@echo 'POSTGRES_SSLMODE="allow"' >> .env
 	@echo "JWT_TOKEN_SECRET=\"$(shell head -n 1024 /dev/urandom | $(MD5) | sed 's/ .*//g')\"" >> .env
-	@cat  client_secret.json | jq -c '.["installed"]' | tr ',' '\n' | sed 's/[{}]//g' | sed 's/^"//g' | sed 's/":/ /g' | awk '{ print toupper($$1) "=" $$2}' >> .env
+	@echo 'API_BASE="http://service:3000"' >> .env
+	@cat  client_secret.json | jq -c '.["web"]["redirect_uris"]=[.["web"]["redirect_uris"][0]]' | jq -c '.["web"]' | jq  -c 'del(.javascript_origins)' | tr ',' '\n' | sed 's/[{}]//g' | sed 's/^"//g' | sed 's/":/ /g' | awk '{ print toupper($$1) "=" $$2}' >> .env
 
-.env.kubernetes: .env
+.env.minikube: .env
 	cat .env | sed 's/="/=/g' | sed 's/"$$//g' > $@
 
 .env.aws: .env
-	cat .env | sed 's/="/=/g' | sed 's/"$$//g' > $@
+	cat .env | sed 's/="/=/g' | sed 's/"$$//g' | grep -v POSTGRES_SSLMODE > $@
+	echo 'POSTGRES_SSLMODE=require' >> $@
 
 compose-build: .env
 	docker compose --env-file .versions build 
@@ -39,26 +42,28 @@ helm-terraform-values:
 	make terraform-output | sed 's/ = /: /g' > infrastructure/helm/mytube/terraform-values.yml
 
 helm-install: minikube-build helm-versions
-	helm install mytube-release ./infrastructure/helm/mytube --namespace mytube \
+	helm install mytube-release ./infrastructure/helm/mytube --namespace mytube $(HELM_DEBUG) \
 		-f infrastructure/helm/mytube/versions.yml \
 		-f infrastructure/helm/mytube/values.yml
 
 helm-install-aws: kubectl-config-aws kubectl-namespace kubectl-secrets helm-versions helm-terraform-values
-	helm install mytube-release ./infrastructure/helm/mytube --namespace mytube \
+	helm install mytube-release ./infrastructure/helm/mytube --namespace mytube $(HELM_DEBUG) \
 		-f infrastructure/helm/mytube/versions.yml \
 		-f infrastructure/helm/mytube/values.yml \
-		-f infrastructure/helm/mytube/terraform-values.yml
+		-f infrastructure/helm/mytube/terraform-values.yml \
+		-f infrastructure/helm/mytube/aws-values.yml
 
 helm-upgrade: minikube-build helm-versions
-	helm upgrade mytube-release ./infrastructure/helm/mytube --namespace mytube \
+	helm upgrade mytube-release ./infrastructure/helm/mytube --namespace mytube $(HELM_DEBUG) \
 		-f infrastructure/helm/mytube/versions.yml \
 		-f infrastructure/helm/mytube/values.yml
 
 helm-upgrade-aws: kubectl-config-aws helm-versions helm-terraform-values
-	helm upgrade mytube-release ./infrastructure/helm/mytube --namespace mytube \
+	helm upgrade mytube-release ./infrastructure/helm/mytube --namespace mytube $(HELM_DEBUG) \
 		-f infrastructure/helm/mytube/versions.yml \
 		-f infrastructure/helm/mytube/values.yml \
-		-f infrastructure/helm/mytube/terraform-values.yml
+		-f infrastructure/helm/mytube/terraform-values.yml \
+		-f infrastructure/helm/mytube/aws-values.yml
 
 helm-uninstall:
 	helm uninstall mytube-release --namespace mytube
@@ -78,9 +83,9 @@ kubectl-config-minikube:
 kubectl-namespace:
 	-kubectl create namespace mytube
 
-kubectl-secrets: .env.kubernetes
+kubectl-secrets: .env.aws
 	-kubectl -n mytube delete secret credentials
-	kubectl -n mytube create secret generic credentials --from-env-file=.env.kubernetes
+	kubectl -n mytube create secret generic credentials --from-env-file=.env.aws
 
 kubectl-secrets-minikube: .env.minikube
 	-kubectl -n mytube delete secret credentials
