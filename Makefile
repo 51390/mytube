@@ -1,5 +1,6 @@
 MD5 := $(shell test `uname` = Linux && echo md5sum || echo md5)
 ENVVARS := source .env; source .versions
+TERRAFORM := tofu
 TERRAFORM_VARS := -var="POSTGRES_PASSWORD=$$POSTGRES_PASSWORD" -var="APP_VERSION=$$APP_VERSION" -var="SERVICE_VERSION=$$SERVICE_VERSION" -var="DB_VERSION=$$DB_VERSION"
 HELM_DEBUG := $(shell test "$(DEBUG)" = "true" && echo '--dry-run --debug' || echo '')
 
@@ -113,16 +114,16 @@ minikube-teardown:
 	make minikube-stop
 
 terraform-init:
-	terraform -chdir=./infrastructure/terraform/aws init
+	$(TERRAFORM) -chdir=./infrastructure/terraform/aws init
 
 terraform-plan: .env
-	$(ENVVARS) ; terraform -chdir=./infrastructure/terraform/aws plan $(TERRAFORM_VARS)
+	$(ENVVARS) ; $(TERRAFORM) -chdir=./infrastructure/terraform/aws plan $(TERRAFORM_VARS)
 
 terraform-apply: .env compose-build
-	$(ENVVARS) ; terraform -chdir=./infrastructure/terraform/aws apply $(TERRAFORM_VARS)
+	$(ENVVARS) ; $(TERRAFORM) -chdir=./infrastructure/terraform/aws apply $(TERRAFORM_VARS)
 
 terraform-destroy: .env
-	$(ENVVARS) ; terraform -chdir=./infrastructure/terraform/aws destroy $(TERRAFORM_VARS)
+	$(ENVVARS) ; $(TERRAFORM) -chdir=./infrastructure/terraform/aws destroy $(TERRAFORM_VARS)
 
 terraform-output:
-	@terraform -chdir=./infrastructure/terraform/aws output
+	@$(TERRAFORM) -chdir=./infrastructure/terraform/aws output
