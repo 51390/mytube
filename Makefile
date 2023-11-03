@@ -73,7 +73,7 @@ helm-uninstall-aws: kubectl-config-aws
 	helm uninstall mytube-release --namespace mytube
 
 infrastructure/helm/mytube/versions.yml: .versions
-	cat .versions | sed 's/=/: /g' | awk '{ print tolower($0) }' > $@
+	cat .versions | sed 's/=/: /g' | awk '{ print tolower($$0) }' > $@
 
 kubectl-config-aws:
 	aws eks update-kubeconfig --region sa-east-1 --name mytube
